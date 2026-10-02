@@ -17,30 +17,41 @@ test('the Pages build isolates through the coi service worker and keeps the URL'
   })
   await page.goto(URL_UNDER_TEST)
 
-  await expect
-    .poll(
-      async () => {
-        try {
-          return await page.evaluate(() => window.crossOriginIsolated)
-        } catch {
-          return false // the execution context went away during the reload
-        }
-      },
-      { timeout: 15_000 },
-    )
-    .toBe(true)
+  const snapshot = () =>
+    page.evaluate(async () => {
+      const registration = await navigator.serviceWorker.getRegistration()
+      return {
+        isolated: window.crossOriginIsolated,
+        documents: Number(sessionStorage.getItem('__e2eDocuments')),
+        coiReloading: sessionStorage.getItem('coiReloading'),
+        scope: registration?.scope ?? null,
+        active: registration?.active?.state ?? null,
+        controlled: navigator.serviceWorker.controller !== null,
+        href: location.href,
+      }
+    })
+  // A failure reports the last snapshot, i.e. how far the first visit got.
+  let last: unknown = null
+  try {
+    await expect
+      .poll(
+        async () => {
+          try {
+            last = await snapshot()
+            return (last as { isolated: boolean }).isolated
+          } catch {
+            return false // the execution context went away during the reload
+          }
+        },
+        { timeout: 15_000 },
+      )
+      .toBe(true)
+  } catch (e) {
+    throw new Error(`${(e as Error).message}\nlast snapshot: ${JSON.stringify(last)}`, { cause: e })
+  }
   await page.waitForLoadState('load')
 
-  const state = await page.evaluate(async () => {
-    const registration = await navigator.serviceWorker.getRegistration()
-    return {
-      documents: Number(sessionStorage.getItem('__e2eDocuments')),
-      isolated: window.crossOriginIsolated,
-      scope: registration?.scope ?? null,
-      controlled: navigator.serviceWorker.controller !== null,
-      href: location.href,
-    }
-  })
+  const state = await snapshot()
   expect(state.documents).toBeGreaterThanOrEqual(1)
   expect(state.documents).toBeLessThanOrEqual(2)
   expect(state.isolated).toBe(true)
