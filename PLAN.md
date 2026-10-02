@@ -1,6 +1,6 @@
 # PLAN
 
-Build of "Analyse" per PROMPT.md. Current phase: **0b (fixtures and red tests)**.
+Build of "Analyse" per PROMPT.md. Current phase: **2 (implement; six worktree agents running)**.
 
 ## Requirements checklist (R1 to R34)
 
@@ -97,3 +97,9 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 | vendor-assets | 1 | general-purpose (sonnet) | main checkout | done |
 | scout-spec | 1 | Explore | - | done (0 fixture mismatches) |
 | scout-packages | 1 | Explore | - | done |
+| impl-engine | 2 | general-purpose (inherit) | worktree (branch reported on completion) | running |
+| impl-import | 2 | general-purpose (inherit) | worktree | running |
+| impl-analysis | 2 | general-purpose (inherit) | worktree | running |
+| impl-explain | 2 | general-purpose (inherit) | worktree | running |
+| impl-ui | 2 | general-purpose (inherit) | worktree | running |
+| impl-deploy | 2 | general-purpose (inherit) | worktree | running |
