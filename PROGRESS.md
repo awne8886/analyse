@@ -125,3 +125,20 @@ $ PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npx playwr
 - Explain snapshot over the three games: src/explain/snapshot.test.ts (3 snapshots written, stable on re-run).
 - pages-coi flake fixed (PLAN Assumption 25): 5/5 runs green with engine-smoke concurrently on 2 workers (previously 4/11 failing).
 - Screenshots: e2e/screenshots/review-desktop.png (1280x800), review-mobile.png (390x844 @2x).
+
+## 2026-10-02 Phase 4 pre-review build record
+
+```
+$ ls -l dist/assets
+total 1112
+-rw-r--r-- 1 root root   3067 Oct  2 23:53 Calibration-ChWSzzpN.js
+-rw-r--r-- 1 root root  19766 Oct  2 23:53 THIRD_PARTY_LICENSES-BRaxo8_2.js
+-rw-r--r-- 1 root root  23195 Oct  2 23:53 index-CDCm0ZUi.css
+-rw-r--r-- 1 root root 995707 Oct  2 23:53 index-DibWHfin.js
+-rw-r--r-- 1 root root  20672 Oct  2 23:53 montserrat-latin-700-normal-BWkrl476.woff
+-rw-r--r-- 1 root root  18824 Oct  2 23:53 montserrat-latin-700-normal-BdjcYUrC.woff2
+-rw-r--r-- 1 root root  20660 Oct  2 23:53 montserrat-latin-800-normal-C3dfDxXV.woff
+-rw-r--r-- 1 root root  19012 Oct  2 23:53 montserrat-latin-800-normal-axpkC1rd.woff2
+$ cat dist/assets/*.js | gzip -c | wc -c
+230041
+```
