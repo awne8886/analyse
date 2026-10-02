@@ -1,0 +1,12 @@
+[Event "Handmade Chess960"]
+[Site "?"]
+[Date "2026.01.01"]
+[Round "-"]
+[White "Alice"]
+[Black "Bob"]
+[Result "1-0"]
+[Variant "Chess960"]
+[SetUp "1"]
+[FEN "rkqbbnnr/pppppppp/8/8/8/8/PPPPPPPP/RKQBBNNR w HAha - 0 1"]
+
+1. e4 e5 1-0

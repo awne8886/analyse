@@ -1,0 +1,9 @@
+[Event "Handmade fixture"]
+[Site "?"]
+[Date "1858.11.02"]
+[Round "-"]
+[White "Paul Morphy"]
+[Black "Duke of Brunswick and Count Isouard"]
+[Result "*"]
+
+1. e4 {[%clk 0:10:00]} e5 {[%clk 0:09:57]} 2. Nf3 {[%clk 0:09:49]} d6 {[%clk 0:09:46]} 3. d4 {[%clk 0:09:38]} Bg4 {[%clk 0:09:35]} 4. dxe5 {[%clk 0:09:27]} Bxf3 {[%clk 0:09:24]} *

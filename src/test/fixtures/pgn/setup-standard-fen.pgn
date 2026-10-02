@@ -1,0 +1,11 @@
+[Event "Handmade standard with SetUp"]
+[Site "?"]
+[Date "2026.01.01"]
+[Round "-"]
+[White "Alice"]
+[Black "Bob"]
+[Result "1-0"]
+[SetUp "1"]
+[FEN "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"]
+
+1. e4 e5 2. Nf3 Nc6 3. Bc4 Bc5 4. O-O Nf6 1-0

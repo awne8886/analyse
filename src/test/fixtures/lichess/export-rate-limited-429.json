@@ -1,0 +1,9 @@
+{
+  "url": "https://lichess.org/game/export/4S1PZUvW",
+  "status": 429,
+  "contentType": "application/json",
+  "acao": "*",
+  "body": {
+    "error": "Please only run 1 request(s) at a time"
+  }
+}

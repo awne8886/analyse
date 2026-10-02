@@ -1,0 +1,9 @@
+[Event "Handmade fixture"]
+[Site "?"]
+[Date "1858.11.02"]
+[Round "-"]
+[White "Paul Morphy"]
+[Black "Duke of Brunswick and Count Isouard"]
+[Result "1-0"]
+
+1. e4 {[%clk 0:10:00]} e5 {[%clk 0:09:57]} 2. Nf3 {[%clk 0:09:49]} d6 {[%clk 0:09:46]} 3. d4 {[%clk 0:09:38]} Bg4 {[%clk 0:09:35]} 4. dxe5 {[%clk 0:09:27]} Bxf3 {[%clk 0:09:24]} 5. Qxf3 {[%clk 0:09:16]} dxe5 {[%clk 0:09:13]} 6. Bc4 {[%clk 0:09:05]} Nf6 {[%clk 0:09:02]} 7. Qb3 {[%clk 0:08:54]} Qe7 {[%clk 0:08:51]} 8. Nc3 {[%clk 0:08:43]} c6 {[%clk 0:08:40]} 9. Bg5 {[%clk 0:08:32]} b5 {[%clk 0:08:29]} 10. Nxb5 {[%clk 0:08:21]} cxb5 {[%clk 0:08:18]} 11. Bxb5+ {[%clk 0:08:10]} Nbd7 {[%clk 0:08:07]} 12. O-O-O {[%clk 0:07:59]} Rd8 {[%clk 0:07:56]} 13. Rxd7 {[%clk 0:07:48]} Rxd7 {[%clk 0:07:45]} 14. Rd1 {[%clk 0:07:37]} Qe6 {[%clk 0:07:34]} 15. Bxd7+ {[%clk 0:07:26]} Nxd7 {[%clk 0:07:23]} 16. Qb8+ {[%clk 0:07:15]} Nxb8 {[%clk 0:07:12]} 17. Rd8# {[%clk 0:07:04]} 1-0
