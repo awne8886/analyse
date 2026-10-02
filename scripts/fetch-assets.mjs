@@ -79,7 +79,10 @@ async function sounds() {
     }
     const ogg = (pack, name) => {
       const dest = join(tmp, `${name}.ogg`)
-      writeFileSync(dest, execFileSync('unzip', ['-p', zips[pack], `Audio/${name}.ogg`], { maxBuffer: 1 << 26 }))
+      writeFileSync(
+        dest,
+        execFileSync('unzip', ['-p', zips[pack], `Audio/${name}.ogg`], { maxBuffer: 1 << 26 }),
+      )
       return dest
     }
     for (const [out, [pack, name]] of Object.entries(SOUNDS)) {

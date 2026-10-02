@@ -31,4 +31,6 @@ if (!bytes.toString('utf8').includes('coepdegrade')) {
 }
 mkdirSync(dirname(dest), { recursive: true })
 writeFileSync(dest, bytes)
-console.log(`wrote public/coi-serviceworker.min.js (${bytes.length} bytes, sha256 ${sha}, contains coepdegrade)`)
+console.log(
+  `wrote public/coi-serviceworker.min.js (${bytes.length} bytes, sha256 ${sha}, contains coepdegrade)`,
+)

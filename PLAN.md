@@ -42,7 +42,7 @@ Build of "Analyse" per PROMPT.md. Current phase: **0b (fixtures and red tests)**
 ## Gates
 
 - [ ] Gate 0 (scaffold + red tests)
-- [ ] Gate 1 (vendor + scouts)
+- [x] Gate 1 (vendor + scouts)
 - [ ] Gate 2 (per agent)
 - [ ] Gate 3 (integration)
 - [ ] Gate 4 (review)
@@ -67,6 +67,7 @@ Build of "Analyse" per PROMPT.md. Current phase: **0b (fixtures and red tests)**
 15. **`calibrate(pool)` reads nps** through an engine-internal method `measureNps(): Promise<number>` that the pool object returned by `createEnginePool` implements (it sends `position startpos` + `go depth 12` on the first ready worker and returns `nps` of the last complete `info` line). `calibrate` maps it with `tierForNps`, stores `{ nps, tier, at }` under `analyse:engineTier` (reused 7 days) and returns the tier; on an `EngineApi` without `measureNps` (the mock engine) it returns the provisional tier `standard-16` and sends nothing.
 16. **Explain open questions (fixtures-explain):** (a) E.3's "a Blunder never yields a sentence containing 'wins'" beats E.4's HangsPiece wording: the impersonal HangsPiece variant reads "...; {reply} simply takes it." (b) `MoveFacts` gains optional `fenBefore` / `fenAfter` (lead edit to `src/types/explain.ts` before Phase 2) so templates can name the piece on a motif square. (c) E.4 has no generic Excellent sentence: impl-explain writes an original one ("Nearly as strong as the engine's choice." style), and Excellent's bestLine appears only when a best-move tactic description exists.
 17. **Key-moment dedupe** "within 2 plies" = a ply distance of 2 or less is dropped (3 is kept), as pinned by `keyMoments.test.ts`. The phases test's mixedness values (51, 87, 117, 163, 41) were re-derived independently by the lead from B.7 with a separate script and match.
+18. **Engine under Node.** The vendored loaders are CommonJS but the repo is `"type": "module"`, so `node public/engine/sf19/stockfish-19-lite-single.js` fails (`require is not defined in ES module scope`). `public/` stays exactly the R10 file set; `scripts/record-evals.mjs` copies the loader to a temp dir as `.cjs` (with the `.wasm` beside it under the matching name) and spawns that.
 
 ## Spec-gap resolutions (from docs/research/spec-gaps.md; binding for Phase 2)
 
@@ -85,8 +86,12 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 | Name | Phase | Type | Branch | Status |
 |---|---|---|---|---|
 | fixtures-import | 0b | general-purpose (sonnet) | main checkout | running |
-| fixtures-engine | 0b | general-purpose (sonnet) | main checkout | running |
-| fixtures-analysis | 0b | general-purpose (sonnet) | main checkout | running |
-| fixtures-explain | 0b | general-purpose (sonnet) | main checkout | running |
-| fixtures-ui | 0b | general-purpose (sonnet) | main checkout | running |
-| fixtures-api | 0b | general-purpose (sonnet) | main checkout | running |
+| fixtures-engine | 0b | general-purpose (sonnet) | main checkout | done |
+| fixtures-analysis | 0b | general-purpose (sonnet) | main checkout | done |
+| fixtures-explain | 0b | general-purpose (sonnet) | main checkout | done |
+| fixtures-ui | 0b | general-purpose (sonnet) | main checkout | done |
+| fixtures-api | 0b | general-purpose (sonnet) | main checkout | done |
+| scout-apis | 1 | general-purpose (sonnet) | main checkout | done (43 endpoints) |
+| vendor-assets | 1 | general-purpose (sonnet) | main checkout | done |
+| scout-spec | 1 | Explore | - | done (0 fixture mismatches) |
+| scout-packages | 1 | Explore | - | done |

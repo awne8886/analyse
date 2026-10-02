@@ -15,6 +15,7 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const outDir = join(root, 'public', 'engine', 'sf19')
 const pkgDir = join(root, 'node_modules', 'stockfish')
 const releaseBase = 'https://github.com/nmrugg/stockfish.js/releases/download/v19.0.0/'
+const sourceBase = 'https://raw.githubusercontent.com/nmrugg/stockfish.js/v19.0.0/'
 
 // null size = existence only (Copying.txt is checked for its text instead).
 const FILES = [
@@ -35,8 +36,15 @@ async function vendor() {
       console.log(`copied   ${f.name} (node_modules/stockfish)`)
       continue
     }
-    const url = new URL(f.name, releaseBase).href
-    const res = await fetch(url)
+    // The release has no Copying.txt asset (HTTP 404); the tagged source tree does.
+    const urls = [new URL(f.name, releaseBase).href]
+    if (f.name === 'Copying.txt') urls.push(`${sourceBase}${f.name}`)
+    let res
+    let url
+    for (url of urls) {
+      res = await fetch(url)
+      if (res.ok) break
+    }
     if (!res.ok) throw new Error(`download failed: ${url} -> HTTP ${res.status}`)
     writeFileSync(dest, Buffer.from(await res.arrayBuffer()))
     console.log(`download ${f.name} (${url})`)
@@ -70,6 +78,11 @@ function check() {
 if (process.argv.includes('--check')) {
   process.exit(check() ? 0 : 1)
 } else {
-  await vendor()
+  try {
+    await vendor()
+  } catch (err) {
+    console.error(err instanceof Error ? err.message : err)
+    process.exit(1)
+  }
   process.exit(check() ? 0 : 1)
 }
