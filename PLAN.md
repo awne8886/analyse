@@ -100,7 +100,7 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 | scout-packages | 1 | Explore | - | done |
 | impl-engine | 2 | general-purpose (inherit) | worktree-agent-a62fcdf3378209847 @ fb7521e | merged |
 | impl-import | 2 | general-purpose (inherit) | worktree | running |
-| impl-analysis | 2 | general-purpose (inherit) | worktree | running |
+| impl-analysis | 2 | general-purpose (inherit) | worktree-agent-a2500c47c9eafbd4d @ 6fdd440 | merged (before impl-import: disjoint paths, merged as it arrived) |
 | impl-explain | 2 | general-purpose (inherit) | worktree | running |
 | impl-ui | 2 | general-purpose (inherit) | worktree | running |
 | impl-deploy | 2 | general-purpose (inherit) | worktree | running |
