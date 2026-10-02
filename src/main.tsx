@@ -1,34 +1,8 @@
-import { StrictMode } from 'react'
-import { createRoot, type Root } from 'react-dom/client'
 import '@fontsource/montserrat/latin-700.css'
 import '@fontsource/montserrat/latin-800.css'
 import './index.css'
 import { ENGINE_STRINGS, deviceProfile } from './engine'
-import type { DeviceProfile } from './types/engine'
-import App from './App'
-
-let root: Root | null = null
-let appRendered = false
-const getRoot = (): Root => (root ??= createRoot(document.getElementById('root')!))
-
-function renderSplash(text: string): void {
-  getRoot().render(
-    <div role="status" className="splash">
-      {text}
-    </div>,
-  )
-}
-
-/** Idempotent: the first Pages visit can reach this twice (timer and reload); one root, one App, one pool. */
-function renderApp(profile: DeviceProfile | null): void {
-  if (appRendered) return
-  appRendered = true
-  getRoot().render(
-    <StrictMode>
-      <App profile={profile} />
-    </StrictMode>,
-  )
-}
+import { renderApp, renderSplash } from './ui/renderApp'
 
 const onPages = import.meta.env.VITE_DEPLOY_TARGET === 'pages'
 const swPossible = 'serviceWorker' in navigator && window.isSecureContext
