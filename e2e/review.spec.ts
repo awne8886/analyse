@@ -65,12 +65,11 @@ async function waitForCompleteReview(page: Page): Promise<void> {
 /** The move-list entries `move-<ply>` as [ply, data-classification] pairs, in DOM order. */
 async function moveEntries(page: Page): Promise<[number, string | null][]> {
   return page
-    .locator('[data-testid^="move-"]:not([data-testid="move-list"])')
+    .locator('[data-testid^="move-"]')
     .evaluateAll((els) =>
-      els.map((e) => [
-        Number(e.getAttribute('data-testid')!.slice(5)),
-        e.getAttribute('data-classification'),
-      ]),
+      els
+        .filter((e) => /^move-\d+$/.test(e.getAttribute('data-testid')!))
+        .map((e) => [Number(e.getAttribute('data-testid')!.slice(5)), e.getAttribute('data-classification')]),
     ) as Promise<[number, string | null][]>
 }
 
@@ -115,6 +114,8 @@ async function tallySum(page: Page, side: 'white' | 'black'): Promise<number> {
 /** Plays `uci` on the board by dragging (react-chessboard listens to mouse events). */
 async function dragMove(page: Page, uci: string): Promise<void> {
   const board = page.getByTestId('board')
+  // Entering Retry steps the board back one ply; wait until the piece has landed on its square (animation).
+  await expect(board.locator(`[data-square="${uci.slice(0, 2)}"] [data-piece]`)).toBeVisible()
   const from = await board.locator(`[data-square="${uci.slice(0, 2)}"]`).boundingBox()
   const to = await board.locator(`[data-square="${uci.slice(2, 4)}"]`).boundingBox()
   if (!from || !to) throw new Error(`squares of ${uci} not on screen`)

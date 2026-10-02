@@ -8,6 +8,7 @@ import { ImportScreen } from './ui/ImportScreen'
 import { MoveByMove } from './ui/MoveByMove'
 import { handleKey } from './ui/navigation'
 import { Overview } from './ui/Overview'
+import { EngineStatus } from './ui/EngineStatus'
 import { SettingsPanel } from './ui/Settings'
 import { t } from './ui/strings'
 import './ui/theme.css'
@@ -18,6 +19,8 @@ export default function App() {
   const screen = useReviewStore((s) => s.screen)
   const game = useReviewStore((s) => s.game)
   const review = useReviewStore((s) => s.review)
+  // 'complete' is set only after the finished review is persisted, so a reload from then on never re-analyses.
+  const persistedComplete = useReviewStore((s) => s.phase === 'complete')
   const theme = useSettingsStore((s) => s.theme)
   const [settingsOpen, setSettingsOpen] = useState(false)
 
@@ -62,9 +65,10 @@ export default function App() {
           <div
             className="review"
             data-testid="review"
-            data-complete={review?.complete === true ? 'true' : 'false'}
+            data-complete={review?.complete === true && persistedComplete ? 'true' : 'false'}
             data-game-id={game.id}
           >
+            <EngineStatus hideWhenIdle />
             {screen === 'overview' ? <Overview /> : <MoveByMove />}
           </div>
         ) : (

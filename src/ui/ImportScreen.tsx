@@ -12,35 +12,13 @@ import {
   submitInput,
   useReviewStore,
   useSettingsStore,
-  type EngineView,
   type RecentGame,
 } from '../state'
-import type { Tier } from '../types/engine'
 import { oneDecimal, playersRowResult } from './format'
 import { renderKeyed } from './messages'
+import { EngineStatus } from './EngineStatus'
 import { ProfileSelect } from './ProfileSelect'
 import { fmt, t } from './strings'
-
-function engineLine(engine: EngineView, tier: Tier | undefined): string {
-  switch (engine.phase) {
-    case 'not-loaded':
-      return t('engine.notLoaded')
-    case 'loading':
-      return engine.percent === null
-        ? t('engine.loadingNoPercent')
-        : t('engine.loading', { percent: Math.round(engine.percent * 100) })
-    case 'ready': {
-      const badge =
-        engine.build === 'lite'
-          ? renderKeyed({ key: 'E-5', vars: { n: engine.threads } })
-          : renderKeyed({ key: 'E-6' })
-      const fast = tier === 'fast-14' ? ` · ${renderKeyed({ key: 'E-4' })}` : ''
-      return t('engine.ready', { badge: badge + fast })
-    }
-    case 'error':
-      return renderKeyed({ key: engine.key, vars: { message: engine.message } })
-  }
-}
 
 export function ImportScreen() {
   const inputId = useId()
@@ -52,8 +30,6 @@ export function ImportScreen() {
   const pending = useReviewStore((s) => s.pending)
   const focusUsername = useReviewStore((s) => s.focusUsername)
   const colorFromUsername = useReviewStore((s) => s.colorFromUsername)
-  const engine = useReviewStore((s) => s.engine)
-  const tier = useReviewStore((s) => s.tier)
   const patch = useReviewStore((s) => s.patch)
   const username = useSettingsStore((s) => s.username)
   const userColor = useSettingsStore((s) => s.userColor)
@@ -188,9 +164,7 @@ export function ImportScreen() {
             </button>
           </div>
         ) : null}
-        <p className="engine-status" data-testid="engine-status">
-          {engineLine(engine, tier)}
-        </p>
+        <EngineStatus />
       </form>
       <section className="recent panel" aria-labelledby="recent-title">
         <h2 id="recent-title">{t('import.recent')}</h2>

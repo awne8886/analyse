@@ -70,3 +70,58 @@ $ cat .claude/settings.json
 ```
 
 Failure classification (vitest JSON reporter): 19 test files, 735 tests, all red: 649 with "Error: not implemented" (stubs), 86 snapshot/table mismatches against the stub tables (src/ui/strings.test.ts 85, src/import/errors.test.ts 1). No other failure kind. Note: the recorded network fixtures already existed (Phase 1 overlapped, PLAN Assumption 14), so no test failed for a missing fixture file.
+
+## 2026-10-02 Gate 3 (integration)
+
+```
+$ npm run lint
+> eslint .
+exit 0
+$ npm run format
+Checking formatting...
+All matched files use Prettier code style!
+exit 0
+$ npm run typecheck
+> tsc -b
+exit 0
+$ npm test
+   Duration  21.59s (environment 49%, tests 29%, setup 7%, transform 7%, import 6%, worker 1%)
+exit 0
+$ npm run build
+dist/assets/index-CNdVSBcC.js                           995.64 kB │ gzip: 222.92 kB
+✓ built in 1.14s
+exit 0
+$ grep -c coi-serviceworker dist/index.html
+0
+$ npm run build:pages
+✓ built in 811ms
+exit 0
+$ grep -c coi-serviceworker dist-pages/index.html
+1
+$ R11 greps
+stockfish-19-lite-single.js
+stockfish-19-lite.js
+2
+0
+0
+$ grep -l /api/chesscom dist/assets/*.js | wc -l
+1
+$ ls src/test/fixtures/evals/
+cc_daily_1000337106.json
+cc_live_129688175007.json
+li_4S1PZUvW.json
+ Test Files  45 passed (45)
+      Tests  1014 passed (1014)
+$ PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npx playwright test --project=chromium
+[11/13] [chromium] › e2e/review.spec.ts:357:5 › mock engine › 360 px › R30: no horizontal scroll at 360 px on any screen
+[12/13] [chromium] › e2e/review.spec.ts:376:5 › mock engine › G.5 screenshots › finished review at ply 40, desktop 1280x800 and mobile 390x844 @2x
+[13/13] [chromium] › e2e/review.spec.ts:417:3 › real engine › the engine boots on the first analysis; WebKit loads lite-single only
+  13 passed (40.3s)
+```
+
+- WebKit project: not runnable in this container (no WebKit build installed; `playwright install` is not allowed here, PLAN Assumption 5). It runs in `.github/workflows/ci.yml` (`npx playwright install --with-deps chromium webkit`). Recorded as CI-only.
+- Eval tables recorded with the real engine (scripts/record-evals.mjs, stockfish 19 lite single under Node from a .cjs copy, MultiPV 2, Hash 32, go depth 16 movetime 2000): cc:live:129688175007 113 positions, cc:daily:1000337106 144 keys (145 positions, one repeated EPD), li:4S1PZUvW 14; ply counts cross-checked 112 / 144 = recorded plyCount / 13. Files are named with ':' replaced by '_'.
+- Pinned R22 phase starts of cc:live:129688175007 (computed once by the merged implementation): middlegame board index **30**, endgame **76** (windows 18-40 and 50-112). Added to src/analysis/phases.test.ts.
+- Explain snapshot over the three games: src/explain/snapshot.test.ts (3 snapshots written, stable on re-run).
+- pages-coi flake fixed (PLAN Assumption 25): 5/5 runs green with engine-smoke concurrently on 2 workers (previously 4/11 failing).
+- Screenshots: e2e/screenshots/review-desktop.png (1280x800), review-mobile.png (390x844 @2x).

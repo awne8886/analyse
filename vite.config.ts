@@ -19,7 +19,10 @@ function coiOnPages(target: string, base: string): Plugin {
           {
             tag: 'script',
             injectTo: 'head',
-            children: `window.coi={coepCredentialless:()=>false,doReload:()=>{try{sessionStorage.setItem('coiReloading','1')}catch(e){}window.location.reload()}};`,
+            // doReload waits for the new worker to claim the page (controllerchange; 2 s fallback): the vendored
+            // script reloads on 'updatefound', while the worker is still installing, and a reload that early
+            // can leave the page uncontrolled and not isolated (PLAN.md Assumption 25).
+            children: `window.coi={coepCredentialless:()=>false,doReload:(r)=>{try{sessionStorage.setItem('coiReloading','1')}catch(e){}var c=navigator.serviceWorker;if(r||!c||c.controller){window.location.reload();return}var d=false,go=()=>{if(!d){d=true;window.location.reload()}};c.addEventListener('controllerchange',go);setTimeout(go,2000)}};`,
           },
           { tag: 'script', injectTo: 'head', attrs: { src: `${base}coi-serviceworker.min.js` } },
         ],

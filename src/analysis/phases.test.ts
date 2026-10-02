@@ -1,5 +1,6 @@
 // R22 and Appendix B.7: lichess Divider, evaluated on the board before each ply.
 // (The pinned middlegame/endgame start plies of cc:live:129688175007 are added by the lead in Phase 3.)
+import { loadNetworkFixture } from '../test/loadFixture'
 import { Chess } from 'chess.js'
 import { describe, expect, it } from 'vitest'
 import { backrankSparse, dividePhases, majorsAndMinors, mixedness } from './index'
@@ -115,5 +116,20 @@ describe('dividePhases (B.7)', () => {
       fens.push(c.fen())
     }
     expect(dividePhases(fens)).toEqual({ endgame: 0 })
+  })
+})
+
+// Pinned regression (R22), added by the lead in Phase 3 from the merged implementation: the Divider boundaries
+// of cc:live:129688175007 (expected windows 18 to 40 and 50 to 112; values recorded in PROGRESS.md).
+describe('pinned phase starts of cc:live:129688175007', () => {
+  it('middlegame starts at board index 30 and endgame at 76', () => {
+    const month = loadNetworkFixture('api.chess.com-month-hikaru-2025-01').body as {
+      games: { url: string; pgn: string }[]
+    }
+    const chess = new Chess()
+    chess.loadPgn(month.games.find((g) => g.url.endsWith('/129688175007'))!.pgn)
+    const beforeFens = chess.history({ verbose: true }).map((m) => m.before)
+    expect(beforeFens).toHaveLength(112)
+    expect(dividePhases(beforeFens)).toEqual({ middlegame: 30, endgame: 76 })
   })
 })

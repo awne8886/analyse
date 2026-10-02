@@ -1,6 +1,6 @@
 # PLAN
 
-Build of "Analyse" per PROMPT.md. Current phase: **2 (implement; six worktree agents running)**.
+Build of "Analyse" per PROMPT.md. Current phase: **4 (review)**.
 
 ## Requirements checklist (R1 to R34)
 
@@ -43,8 +43,8 @@ Build of "Analyse" per PROMPT.md. Current phase: **2 (implement; six worktree ag
 
 - [x] Gate 0 (scaffold + red tests): 19 red test files, 735 failing tests (649 not implemented, 86 stub-table mismatches)
 - [x] Gate 1 (vendor + scouts)
-- [ ] Gate 2 (per agent)
-- [ ] Gate 3 (integration)
+- [x] Gate 2 (per agent): all six branches reported lint/format/typecheck/owned tests green (impl-import 3 test-literal failures fixed by the lead, Assumption 22)
+- [x] Gate 3 (integration): 1014 unit tests, 13/13 Chromium e2e; WebKit CI-only
 - [ ] Gate 4 (review)
 - [ ] Final gates (5.2)
 
@@ -74,6 +74,8 @@ Build of "Analyse" per PROMPT.md. Current phase: **2 (implement; six worktree ag
 22. **Test correction (lead, not a weakening):** `src/import/errors.test.ts` expected `'I-27': 'error'` and `'I-27b': 'Please only run 1 request(s) at a time'` (the lichess 429 body from the F.1 "Input and detection" column). The expected values were corrected to the F.1 string column ("Lichess is rate-limiting requests. Retrying in 60 s…" / "Lichess is still rate-limiting requests. Wait a minute and try again."), which is what the appendix pins. `ImportOptions` gained an optional `wait(ms)` (impl-import).
 23. **Container restart during Phase 2** killed impl-explain, impl-ui and impl-deploy mid-run. Their uncommitted worktree changes were committed by the lead as WIP commits on their own branches (5b81dda, 1b2c052, f5a47ec) and the three agents were resumed from their transcripts. Node 24 under /opt survived the restart.
 24. **Explain depth gate:** below `min(depthTarget, 14)` only rules naming material, mate or a motif are suppressed (section 3.8 "tactical rules"); board-fact rules (Checkmate, Castles, Develops, Recapture, Promotion, PassedPawn, Book, Forced) and the generic sentence still run.
+25. **coi reload timing (lead fix, deviation from D.5's inline `window.coi`):** the vendored coi-serviceworker calls `doReload()` on `updatefound`, while the new worker is still installing; reloading that early can leave the second page uncontrolled and not isolated (impl-deploy saw `pages-coi.spec.ts` fail 4/11 under load: `controlled:false`, 2 documents). The inline `doReload(reason)` now waits for `controllerchange` (the worker calls `clients.claim()` on activate) with a 2 s fallback before reloading; the `coepdegrade` reload stays immediate. Still one reload / at most 2 navigations, so the risk-4 assertion is unchanged.
+26. **Phase 3 integration fixes (lead):** `data-complete` on the review root is true only once the finished review is persisted (`phase === 'complete'`), so a reload right after completion never re-analyses (DoD 9 race); the engine status line (G.7) is also shown above the review (`src/ui/EngineStatus.tsx`), so the badge stays visible while analysing; `e2e/review.spec.ts` waits for the piece to land on its square before a Retry drag (the board animates back one ply) and selects only numeric `move-<ply>` test ids (the UI also has `move-by-move`).
 
 ## Spec-gap resolutions (from docs/research/spec-gaps.md; binding for Phase 2)
 
@@ -106,4 +108,4 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 | impl-analysis | 2 | general-purpose (inherit) | worktree-agent-a2500c47c9eafbd4d @ 6fdd440 | merged (before impl-import: disjoint paths, merged as it arrived) |
 | impl-explain | 2 | general-purpose (inherit) | worktree-agent-a120e6c225c5dd86c @ 49363b6 | merged |
 | impl-ui | 2 | general-purpose (inherit) | worktree-agent-ad98a86a3637f9fb6 @ b914ae4 | merged |
-| impl-deploy | 2 | general-purpose (inherit) | worktree | running |
+| impl-deploy | 2 | general-purpose (inherit) | worktree-agent-a88957d9b2d897a61 @ 85c13a3 | merged |
