@@ -109,3 +109,7 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 | impl-explain | 2 | general-purpose (inherit) | worktree-agent-a120e6c225c5dd86c @ 49363b6 | merged |
 | impl-ui | 2 | general-purpose (inherit) | worktree-agent-ad98a86a3637f9fb6 @ b914ae4 | merged |
 | impl-deploy | 2 | general-purpose (inherit) | worktree-agent-a88957d9b2d897a61 @ 85c13a3 | merged |
+| review-correctness | 4 | general-purpose (inherit) | main checkout (docs/review/correctness.md) | running |
+| review-a11y | 4 | general-purpose (inherit) | main checkout (docs/review/a11y.md) | running |
+| review-performance-mobile | 4 | general-purpose (inherit) | main checkout (docs/review/performance.md) | running |
+| review-parity | 4 | general-purpose (inherit) | main checkout (docs/review/parity.md) | running |
