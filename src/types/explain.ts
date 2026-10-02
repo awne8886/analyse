@@ -57,6 +57,10 @@ export interface MoveFacts {
   depthReached: number
   depthTarget: number
   previous?: { classification: Classification; san: string; loss: number; opponentGain: number }
+  // Lead addition (Phase 1): full FENs of the boards before and after the move, so templates can name the piece
+  // on a motif square ({piece} must never be the word "piece" when the type is known, E.6).
+  fenBefore?: string
+  fenAfter?: string
 }
 export type Motif =
   | { type: 'fork'; by: string; targets: string[] }
