@@ -206,8 +206,8 @@ const MSG = {
   I17_newvariant: "This game type (newvariant) isn't supported.",
   I18: "Couldn't reach Chess.com right now. Try again in a moment, or paste the PGN.",
   I26: "Couldn't find this game on Lichess (or Lichess is unreachable). Check the link. It should look like lichess.org/AbCd1234.",
-  I27_first: 'error',
-  I27_second: 'Please only run 1 request(s) at a time',
+  I27_first: 'Lichess is rate-limiting requests. Retrying in 60 s…',
+  I27_second: 'Lichess is still rate-limiting requests. Wait a minute and try again.',
   I28_study:
     'This is a Lichess study chapter, not a game. Open the game and copy its link (lichess.org/XXXXXXXX).',
   I28_puzzle: 'This is a Lichess puzzle, not a game. Open the game and copy its link (lichess.org/XXXXXXXX).',
@@ -256,8 +256,8 @@ const EXPECTED_IMPORT_STRINGS: Record<string, string> = {
   'I-21': 'Result unknown',
   'I-26':
     "Couldn't find this game on Lichess (or Lichess is unreachable). Check the link. It should look like lichess.org/AbCd1234.",
-  'I-27': 'error',
-  'I-27b': 'Please only run 1 request(s) at a time',
+  'I-27': 'Lichess is rate-limiting requests. Retrying in 60 s…',
+  'I-27b': 'Lichess is still rate-limiting requests. Wait a minute and try again.',
   'I-28': 'This is a Lichess {what}, not a game. Open the game and copy its link (lichess.org/XXXXXXXX).',
   'I-30': 'This PGN looks unfinished. Analyse the moves present?',
   'I-33': 'This PGN contains {n} games. Pick one.',

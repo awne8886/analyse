@@ -71,6 +71,7 @@ Build of "Analyse" per PROMPT.md. Current phase: **2 (implement; six worktree ag
 19. **Phase 0b test files (19, all red at Gate 0):** src/import/{parseInput,tcn,variantGate,errors}.test.ts (201), src/engine/{parseInfo,deviceProfile,calibrate}.test.ts (91), src/analysis/{winPercent,classify,accuracy,rating,phases,keyMoments}.test.ts (82), src/explain/{detectors,explain}.test.ts (160), src/state/{urlState,settingsStore}.test.ts + src/ui/strings.test.ts (163), api/chesscom.test.ts (38). Expected failure count before Phase 2: 735.
 20. **Live ids vs time (fixtures-import):** the tohayes recordings show live ids that are not monotonic in time (174531660852 ended 2026-09-15, 173846034210 on 2026-09-01, while the anchor 183193101523 is 2026-09-08), so the A.5 prediction can miss; the 3-month scan then ends with P-9 and the PGN path. Kept as specified; follow-up below.
 21. **Engine cancellation semantics (impl-engine):** evaluate() promises cancelled by stop()/dispose()/a newer jobId reject with `name === 'AbortError'`; the watchdog give-up resolves `notAnalysed: true`; loading percent is 0..1; calibrate on the mock engine returns 'auto-18' (mock measureNps = 1,000,000, docs/notes/contracts.md), superseding the 'standard-16' wording of Assumption 15 for the mock.
+22. **Test correction (lead, not a weakening):** `src/import/errors.test.ts` expected `'I-27': 'error'` and `'I-27b': 'Please only run 1 request(s) at a time'` (the lichess 429 body from the F.1 "Input and detection" column). The expected values were corrected to the F.1 string column ("Lichess is rate-limiting requests. Retrying in 60 s…" / "Lichess is still rate-limiting requests. Wait a minute and try again."), which is what the appendix pins. `ImportOptions` gained an optional `wait(ms)` (impl-import).
 
 ## Spec-gap resolutions (from docs/research/spec-gaps.md; binding for Phase 2)
 
@@ -99,7 +100,7 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 | scout-spec | 1 | Explore | - | done (0 fixture mismatches) |
 | scout-packages | 1 | Explore | - | done |
 | impl-engine | 2 | general-purpose (inherit) | worktree-agent-a62fcdf3378209847 @ fb7521e | merged |
-| impl-import | 2 | general-purpose (inherit) | worktree | running |
+| impl-import | 2 | general-purpose (inherit) | worktree-agent-a797c52c6ecf65e5e @ 63f7665 | merged |
 | impl-analysis | 2 | general-purpose (inherit) | worktree-agent-a2500c47c9eafbd4d @ 6fdd440 | merged (before impl-import: disjoint paths, merged as it arrived) |
 | impl-explain | 2 | general-purpose (inherit) | worktree | running |
 | impl-ui | 2 | general-purpose (inherit) | worktree | running |
