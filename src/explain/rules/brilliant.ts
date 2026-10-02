@@ -74,4 +74,9 @@ export const sacTactic = rule({
   },
 })
 
-export const BRILLIANT_RULES: Rule[] = [sacMate, sacMaterial, sacTactic, generic('Brilliant', 'brilliantGeneric', 'brilliantGeneric')]
+export const BRILLIANT_RULES: Rule[] = [
+  sacMate,
+  sacMaterial,
+  sacTactic,
+  generic('Brilliant', 'brilliantGeneric', 'brilliantGeneric'),
+]

@@ -35,13 +35,15 @@ export const seededIndex = (ply: number, n: number) => ((ply % n) + n) % n
 
 function bestLine(f: MoveFacts): string | undefined {
   if (f.bestSan === null || f.bestSan === f.san) return undefined
-  const named = NEEDS_BEST.has(f.classification) || (f.classification === 'excellent' && bestTacticGated(f) !== null)
+  const named =
+    NEEDS_BEST.has(f.classification) || (f.classification === 'excellent' && bestTacticGated(f) !== null)
   return named ? `Best was ${f.bestSan}` : undefined
 }
 
 /** E.4 "Second sentence": the book transition, or the E.7 swing sentence when a bucket boundary was crossed. */
 function secondSentence(f: MoveFacts, voice: Voice, rule: Rule, gate: boolean): string[] {
-  if (f.classification === 'book') return f.opening?.isNewName ? [fill(BOOK_ENTERS, { name: f.opening.name })] : []
+  if (f.classification === 'book')
+    return f.opening?.isNewName ? [fill(BOOK_ENTERS, { name: f.opening.name })] : []
   if (!gate || rule.swing) return []
   const swing = swingSentence(f, voice)
   return swing ? [swing] : []

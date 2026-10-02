@@ -13,7 +13,8 @@ export const critical = rule({
     const bestWin = f.winBefore // the mover's win% of the engine's first line
     const secondWin = bestWin - gap.winPct
     // secondBestConsequence, derived from the second line's score only.
-    const consequence = secondWin < 0.5 ? 'allows mate' : bestWin >= 60 && secondWin < 60 ? 'loses the advantage' : ''
+    const consequence =
+      secondWin < 0.5 ? 'allows mate' : bestWin >= 60 && secondWin < 60 ? 'loses the advantage' : ''
     return {
       tpl: 'critical',
       cites: { gapWinPct: gap.winPct, gapCp: gap.cp ?? 'none' },
@@ -28,7 +29,11 @@ export const greatFind = rule({
   code: 'GreatFind',
   when: (f) => f.previous !== undefined && ['mistake', 'blunder'].includes(f.previous.classification),
   prove: (f) => {
-    const mate = f.isMate ? 'delivering checkmate' : (f.mateAfter ?? 0) > 0 ? `forcing mate in ${f.mateAfter}` : ''
+    const mate = f.isMate
+      ? 'delivering checkmate'
+      : (f.mateAfter ?? 0) > 0
+        ? `forcing mate in ${f.mateAfter}`
+        : ''
     const t = mate ? null : playedTactic(f, GREAT_TACTICS)
     if (!mate && !t) return null
     return {
@@ -57,4 +62,9 @@ export const foundWin = rule({
   },
 })
 
-export const GREAT_RULES: Rule[] = [critical, greatFind, foundWin, generic('Great', 'greatGeneric', 'greatGeneric')]
+export const GREAT_RULES: Rule[] = [
+  critical,
+  greatFind,
+  foundWin,
+  generic('Great', 'greatGeneric', 'greatGeneric'),
+]

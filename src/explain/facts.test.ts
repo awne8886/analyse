@@ -2,7 +2,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Score } from '../types/engine'
 
-const opening = vi.hoisted(() => ({ lookup: vi.fn<(epd: string) => { eco: string; name: string } | undefined>() }))
+const opening = vi.hoisted(() => ({
+  lookup: vi.fn<(epd: string) => { eco: string; name: string } | undefined>(),
+}))
 vi.mock('../analysis', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../analysis')>()
   const K = actual.REVIEW_CONFIG.winCurveK
@@ -102,7 +104,13 @@ describe('buildMoveFacts: hangs mate (Scholar mate)', () => {
 
   it('the mating move itself is a checkmate (last ply, no played line)', () => {
     const f = buildMoveFacts(review, 7, 'b')
-    expect(f).toMatchObject({ isMate: true, isCheck: true, isUserMove: false, playedPv: [], replyIsMate: false })
+    expect(f).toMatchObject({
+      isMate: true,
+      isCheck: true,
+      isUserMove: false,
+      playedPv: [],
+      replyIsMate: false,
+    })
     const e = explain(f, 'impersonal')
     expect(e.reasonCode).toBe('Checkmate')
     expect(e.sentences).toEqual(['Checkmate ends the game.'])
@@ -144,8 +152,10 @@ describe('buildMoveFacts: a knight fork', () => {
       lost: [],
       captures: 1,
     })
-    // From the loser's side the final capture is a loss and is kept.
-    expect(materialAlong(fen, ['Nc7+', 'Kd7', 'Nxa8'], 'b', 'loss').net).toBe(-5)
+    // Measured as a loss for Black, the unanswered final capture is not counted either (no unproven loss claims);
+    // measured as a gain for Black it is kept, so a "wins" claim is never overstated.
+    expect(materialAlong(fen, ['Nc7+', 'Kd7', 'Nxa8'], 'b', 'loss').net).toBe(0)
+    expect(materialAlong(fen, ['Nc7+', 'Kd7', 'Nxa8'], 'b', 'gain').net).toBe(-5)
   })
 })
 
@@ -234,7 +244,7 @@ describe('buildMoveFacts: data sources', () => {
     const f = buildMoveFacts(review, 2, 'w')
     expect(f.povBefore).toEqual({ type: 'cp', value: 80 })
     expect(f.gapToSecondBest?.cp).toBe(330)
-    expect(f.gapToSecondBest?.winPct).toBeGreaterThan(30)
+    expect(f.gapToSecondBest?.winPct).toBeCloseTo(28.83, 1) // B.2 curve: 57.35 - 28.52
     expect(f.isUserMove).toBe(false)
     expect(f.depthReached).toBe(12)
   })
@@ -253,7 +263,11 @@ describe('buildMoveFacts: data sources', () => {
 
   it('opening via lookupOpening: name, ECO and whether the name changed on this move', () => {
     opening.lookup.mockImplementation((epd) =>
-      epd === E4_EPD ? { eco: 'B00', name: "King's Pawn Opening" } : epd === START_EPD ? undefined : undefined,
+      epd === E4_EPD
+        ? { eco: 'B00', name: "King's Pawn Opening" }
+        : epd === START_EPD
+          ? undefined
+          : undefined,
     )
     const review = makeReview([{ san: 'e4', classification: 'book' }])
     const f = buildMoveFacts(review, 1, 'w')

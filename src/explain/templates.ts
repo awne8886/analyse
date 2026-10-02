@@ -29,13 +29,24 @@ export const PIECE_NAME: Record<string, string> = {
   q: 'queen',
   k: 'king',
 }
-const ARTICLE: Record<string, string> = { p: 'a pawn', n: 'a knight', b: 'a bishop', r: 'a rook', q: 'the queen' }
+const ARTICLE: Record<string, string> = {
+  p: 'a pawn',
+  n: 'a knight',
+  b: 'a bishop',
+  r: 'a rook',
+  q: 'the queen',
+}
 
 /**
  * `{material}` (E.6). `n` is the net value in pawn units; `lost` / `gained` are the piece letters the losing side
  * gave up and took back during the sequence (when known); `captures` the number of captures in the sequence.
  */
-export function describeMaterial(n: number, lost: string[] = [], gained: string[] = [], captures = 0): string {
+export function describeMaterial(
+  n: number,
+  lost: string[] = [],
+  gained: string[] = [],
+  captures = 0,
+): string {
   const v = Math.round(n)
   if (captures > 3) return `material (about ${v} pawns)`
   if (v >= 10) return 'decisive material'
@@ -52,7 +63,13 @@ export function describeMaterial(n: number, lost: string[] = [], gained: string[
     return `${ARTICLE[L[0]]} for ${G[0] === 'q' ? 'a queen' : ARTICLE[G[0]]}`
   }
   if (L.length === 2 && G.length === 0 && L[0] === 'p' && L[1] === 'p') return 'two pawns'
-  const byValue: Record<number, string> = { 1: 'a pawn', 2: 'two pawns', 3: 'a minor piece', 5: 'a rook', 9: 'the queen' }
+  const byValue: Record<number, string> = {
+    1: 'a pawn',
+    2: 'two pawns',
+    3: 'a minor piece',
+    5: 'a rook',
+    9: 'the queen',
+  }
   return byValue[v] ?? `material (about ${v} pawns)`
 }
 
@@ -60,7 +77,11 @@ export function describeMaterial(n: number, lost: string[] = [], gained: string[
  * Fills `{key}` placeholders. A placeholder that opens the sentence uses the move-numbered form from `numbered`
  * when one exists (E.6: `12.Nf3`, `12...Nf6`). A missing key is a programming error.
  */
-export function fill(tpl: string, vars: Record<string, string>, numbered: Record<string, string> = {}): string {
+export function fill(
+  tpl: string,
+  vars: Record<string, string>,
+  numbered: Record<string, string> = {},
+): string {
   return tpl.replace(/\{(\w+)\}/g, (_m, key: string, offset: number) => {
     if (offset === 0 && numbered[key] !== undefined) return numbered[key]
     const v = vars[key]
@@ -171,7 +192,10 @@ export const T = {
     ],
   },
   permitsFork: {
-    impersonal: ['This allows {reply}, forking the {t1} and {t2}.', 'This runs into {reply}, a fork of the {t1} and {t2}.'],
+    impersonal: [
+      'This allows {reply}, forking the {t1} and {t2}.',
+      'This runs into {reply}, a fork of the {t1} and {t2}.',
+    ],
     personal: [
       'This lets your opponent fork your {t1} and {t2} with {reply}.',
       'Now {reply} forks your {t1} and {t2}.',
@@ -203,11 +227,17 @@ export const T = {
     personal: ['You had mate in {n} with {best}.', 'You let a forced mate go; {best} was mate in {n}.'],
   },
   missedWinMaterial: {
-    impersonal: ['This misses {best}, which would have won {material}.', '{best} would have won {material} here.'],
+    impersonal: [
+      'This misses {best}, which would have won {material}.',
+      '{best} would have won {material} here.',
+    ],
     personal: ['{best} was winning here.', 'You could have won {material} with {best}.'],
   },
   missedWinEval: {
-    impersonal: ['This misses {best}, which kept a winning position.', '{best} would have kept the win in hand.'],
+    impersonal: [
+      'This misses {best}, which kept a winning position.',
+      '{best} would have kept the win in hand.',
+    ],
     personal: ['{best} was winning here.', 'You had a winning continuation in {best}.'],
   },
   evalSwing: {
@@ -215,8 +245,14 @@ export const T = {
     personal: ['{swing}', 'The balance shifts here. {swing}'],
   },
   blunderGeneric: {
-    impersonal: ['A costly move; {best} kept everything under control.', 'This gives away a lot; {best} was needed.'],
-    personal: ['That one hurts: {best} was the move to play.', 'A painful slip; {best} would have held things together.'],
+    impersonal: [
+      'A costly move; {best} kept everything under control.',
+      'This gives away a lot; {best} was needed.',
+    ],
+    personal: [
+      'That one hurts: {best} was the move to play.',
+      'A painful slip; {best} would have held things together.',
+    ],
   },
   blunderGenericNoBest: {
     impersonal: ['A costly move that changes the evaluation sharply.', 'This gives away a lot.'],
@@ -251,7 +287,10 @@ export const T = {
     ],
   },
   mistakeGeneric: {
-    impersonal: ['A clear step down from {best}.', 'This makes the position clearly worse; {best} was better.'],
+    impersonal: [
+      'A clear step down from {best}.',
+      'This makes the position clearly worse; {best} was better.',
+    ],
     personal: [
       'Not what the position asked for; {best} was clearly stronger.',
       'You had better here: {best} was clearly stronger.',
@@ -272,14 +311,20 @@ export const T = {
       'This allows {reply}, which is unpleasant to meet.',
       'This hands the opponent {reply}, an awkward reply to face.',
     ],
-    personal: ['This lets your opponent play {reply}, an annoying reply.', 'After this you have to deal with {reply}.'],
+    personal: [
+      'This lets your opponent play {reply}, an annoying reply.',
+      'After this you have to deal with {reply}.',
+    ],
   },
   inaccuracyGeneric: {
     impersonal: [
       'Slightly imprecise; {best} keeps more of the position.',
       'A small slip; {best} was a little more accurate.',
     ],
-    personal: ['Playable, though {best} was the more accurate move.', 'Not quite precise; {best} was a touch better.'],
+    personal: [
+      'Playable, though {best} was the more accurate move.',
+      'Not quite precise; {best} was a touch better.',
+    ],
   },
   inaccuracyGenericNoBest: {
     impersonal: ['Slightly imprecise.', 'A small slip.'],
@@ -354,7 +399,10 @@ export const T = {
       'Brilliant: the {piece} on {square} is given up, {tacIng}.',
       'A brilliant sacrifice of the {piece}, {tacIng}.',
     ],
-    personal: ['Brilliant! You give up the {piece} on {square}, {tacIng}.', 'Brilliant! Your {piece} sacrifice works, {tacIng}.'],
+    personal: [
+      'Brilliant! You give up the {piece} on {square}, {tacIng}.',
+      'Brilliant! Your {piece} sacrifice works, {tacIng}.',
+    ],
   },
   brilliantGeneric: {
     impersonal: [
@@ -373,11 +421,20 @@ export const T = {
       'Great move: this was the only move that holds the position{clause}.',
       'The only good move here{clause}.',
     ],
-    personal: ['Great find: this was your only good move{clause}.', 'You found the only move that holds{clause}.'],
+    personal: [
+      'Great find: this was your only good move{clause}.',
+      'You found the only move that holds{clause}.',
+    ],
   },
   greatFind: {
-    impersonal: ['Great: this punishes {oppLastMove} with {san}, {tacIng}.', '{san} punishes {oppLastMove} at once, {tacIng}.'],
-    personal: ['Great! You punished {oppLastMove} with {san}, {tacIng}.', 'You made {oppLastMove} pay with {san}, {tacIng}.'],
+    impersonal: [
+      'Great: this punishes {oppLastMove} with {san}, {tacIng}.',
+      '{san} punishes {oppLastMove} at once, {tacIng}.',
+    ],
+    personal: [
+      'Great! You punished {oppLastMove} with {san}, {tacIng}.',
+      'You made {oppLastMove} pay with {san}, {tacIng}.',
+    ],
   },
   foundWin: {
     impersonal: [
@@ -390,11 +447,17 @@ export const T = {
     ],
   },
   foundNotLosing: {
-    impersonal: ['{Color} was in trouble and is now back to level.', 'A rescue: {Color} escapes to an equal game.'],
+    impersonal: [
+      '{Color} was in trouble and is now back to level.',
+      'A rescue: {Color} escapes to an equal game.',
+    ],
     personal: ['You were in trouble and are now back to level.', 'A rescue: you escape to an equal game.'],
   },
   greatGeneric: {
-    impersonal: ['A great find that changes the course of the game.', 'A precise move that few players would find.'],
+    impersonal: [
+      'A great find that changes the course of the game.',
+      'A precise move that few players would find.',
+    ],
     personal: [
       'A great find; this move changes the course of the game.',
       'A precise move that few players would find; well done.',
@@ -407,7 +470,10 @@ export const T = {
     personal: ['Checkmate. Well played.', 'Checkmate. You finish the game in style.'],
   },
   stillMate: {
-    impersonal: ['Keeps the mating attack on track: mate in {n}.', 'The mating net holds: mate in {n} remains.'],
+    impersonal: [
+      'Keeps the mating attack on track: mate in {n}.',
+      'The mating net holds: mate in {n} remains.',
+    ],
     personal: ['Still on track: mate in {n}.', 'You keep the mating attack going: mate in {n}.'],
   },
   mateThreat: {
@@ -468,11 +534,17 @@ export const T = {
   },
   promotion: {
     impersonal: ['Promotes the pawn to a {piece}.', 'The pawn reaches the last rank and becomes a {piece}.'],
-    personal: ['You promote your pawn to a {piece}.', 'Your pawn reaches the last rank and becomes a {piece}.'],
+    personal: [
+      'You promote your pawn to a {piece}.',
+      'Your pawn reaches the last rank and becomes a {piece}.',
+    ],
   },
   bestGeneric: {
     impersonal: ['The strongest move in the position.', 'Exactly what the position called for.'],
-    personal: ['The strongest move you had; well spotted.', 'Exactly what the position called for; nicely done.'],
+    personal: [
+      'The strongest move you had; well spotted.',
+      'Exactly what the position called for; nicely done.',
+    ],
   },
 
   // Excellent
@@ -485,18 +557,36 @@ export const T = {
     personal: ['A strong move: it {pd}.', 'A sound choice; your move {pd}.'],
   },
   excellentGenericBest: {
-    impersonal: ['Nearly as strong as {best}, which {tacS}.', 'Very close to the top choice, though {best} {tacS}.'],
-    personal: ['Nearly as strong as {best}, which {tacS}.', 'Very close to the top choice, though {best} {tacS}.'],
+    impersonal: [
+      'Nearly as strong as {best}, which {tacS}.',
+      'Very close to the top choice, though {best} {tacS}.',
+    ],
+    personal: [
+      'Nearly as strong as {best}, which {tacS}.',
+      'Very close to the top choice, though {best} {tacS}.',
+    ],
   },
   excellentGeneric: {
-    impersonal: ["Nearly as strong as the engine's first choice.", "A strong move, close to the engine's top line."],
-    personal: ["Very close to the engine's first choice; well played.", "A strong move; you stayed close to the engine's top line."],
+    impersonal: [
+      "Nearly as strong as the engine's first choice.",
+      "A strong move, close to the engine's top line.",
+    ],
+    personal: [
+      "Very close to the engine's first choice; well played.",
+      "A strong move; you stayed close to the engine's top line.",
+    ],
   },
 
   // Good
   goodTactic: {
-    impersonal: ['A reasonable move, though {best} was stronger, {tacIng}.', 'Decent, but {best} was stronger, {tacIng}.'],
-    personal: ['A fair move, though {best} was stronger, {tacIng}.', 'Not bad, but {best} was stronger, {tacIng}.'],
+    impersonal: [
+      'A reasonable move, though {best} was stronger, {tacIng}.',
+      'Decent, but {best} was stronger, {tacIng}.',
+    ],
+    personal: [
+      'A fair move, though {best} was stronger, {tacIng}.',
+      'Not bad, but {best} was stronger, {tacIng}.',
+    ],
   },
   goodGeneric: {
     impersonal: ['A reasonable move, though {best} was stronger.', 'Decent, but {best} was a bit stronger.'],
@@ -509,8 +599,14 @@ export const T = {
 
   // Book and Forced
   book: {
-    impersonal: ['{name} ({eco}). A known opening move.', 'A known opening move. The game follows the {name} ({eco}).'],
-    personal: ['{name} ({eco}). A known opening move.', 'A known opening move. You are following the {name} ({eco}).'],
+    impersonal: [
+      '{name} ({eco}). A known opening move.',
+      'A known opening move. The game follows the {name} ({eco}).',
+    ],
+    personal: [
+      '{name} ({eco}). A known opening move.',
+      'A known opening move. You are following the {name} ({eco}).',
+    ],
   },
   bookNoName: {
     impersonal: ['A known opening move.', 'A known opening move from established theory.'],

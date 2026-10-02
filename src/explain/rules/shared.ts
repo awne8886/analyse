@@ -59,14 +59,20 @@ export function generic(code: string, withBest: TemplateId, noBest: TemplateId):
     needsDepth: false,
     arrows: ['best'],
     when: () => true,
-    prove: (f) => ({ tpl: hasBest(f) ? withBest : noBest, cites: { bestSan: f.bestSan ?? 'none' }, squares: [], vars: {} }),
+    prove: (f) => ({
+      tpl: hasBest(f) ? withBest : noBest,
+      cites: { bestSan: f.bestSan ?? 'none' },
+      squares: [],
+      vars: {},
+    }),
   })
 }
 
 export const hasBest = (f: MoveFacts): f is MoveFacts & { bestSan: string } =>
   f.bestSan !== null && f.bestSan !== f.san
 
-export const gateOpen = (f: MoveFacts) => f.depthReached >= Math.min(f.depthTarget, REVIEW_CONFIG.explainDepthGate)
+export const gateOpen = (f: MoveFacts) =>
+  f.depthReached >= Math.min(f.depthTarget, REVIEW_CONFIG.explainDepthGate)
 
 // --------------------------------------------------------------------------------------------------------------
 // Placeholder values
@@ -178,7 +184,8 @@ export const boards = (f: MoveFacts) => {
 export function lossMaterial(f: MoveFacts): string {
   if (f.fenBefore) {
     const ml = materialAlong(f.fenBefore, [f.san, ...f.playedPv], f.color, 'loss')
-    if (-ml.net === f.playedMaterialLoss) return describeMaterial(f.playedMaterialLoss, ml.lost, ml.gained, ml.captures)
+    if (-ml.net === f.playedMaterialLoss)
+      return describeMaterial(f.playedMaterialLoss, ml.lost, ml.gained, ml.captures)
   }
   return describeMaterial(f.playedMaterialLoss)
 }

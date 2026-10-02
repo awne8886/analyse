@@ -18,7 +18,8 @@ import {
   type Rule,
 } from './shared'
 
-const replyProven = (f: { replySan?: string; playedPv: string[] }) => Boolean(f.replySan) && f.playedPv.length >= 2
+const replyProven = (f: { replySan?: string; playedPv: string[] }) =>
+  Boolean(f.replySan) && f.playedPv.length >= 2
 
 export const hangsMate = rule({
   code: 'HangsMate',
@@ -34,7 +35,12 @@ export const hangsMate = rule({
       }
     }
     if (!mate) return null
-    return { tpl: 'hangsMate', cites: { replyIsMate: true, mateInOne: mate }, squares: [], vars: { reply: mate } }
+    return {
+      tpl: 'hangsMate',
+      cites: { replyIsMate: true, mateInOne: mate },
+      squares: [],
+      vars: { reply: mate },
+    }
   },
 })
 
@@ -212,4 +218,3 @@ export const BLUNDER_RULES: Rule[] = [
   evalSwing,
   generic('Generic', 'blunderGeneric', 'blunderGenericNoBest'),
 ]
-

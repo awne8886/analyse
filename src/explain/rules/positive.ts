@@ -36,7 +36,13 @@ const DEFS: PositiveDef[] = [
     code: 'Checkmate',
     needsDepth: false,
     when: (f) => f.isMate,
-    prove: () => ({ tpl: 'checkmate', cites: { isMate: true }, squares: [], vars: {}, pd: 'delivers checkmate' }),
+    prove: () => ({
+      tpl: 'checkmate',
+      cites: { isMate: true },
+      squares: [],
+      vars: {},
+      pd: 'delivers checkmate',
+    }),
   },
   {
     code: 'StillMate',
@@ -152,7 +158,13 @@ const DEFS: PositiveDef[] = [
     when: (f) => has(f, 'recapture') && Boolean(f.captured),
     prove: (f) => {
       const piece = PIECE_NAME[f.captured!]
-      return { tpl: 'recapture', cites: { recapture: f.to }, squares: [f.to], vars: { piece }, pd: `takes back the ${piece}` }
+      return {
+        tpl: 'recapture',
+        cites: { recapture: f.to },
+        squares: [f.to],
+        vars: { piece },
+        pd: `takes back the ${piece}`,
+      }
     },
   },
   {
@@ -172,7 +184,13 @@ const DEFS: PositiveDef[] = [
     when: (f) => has(f, 'develops'),
     prove: (f) => {
       const piece = PIECE_NAME[f.piece]
-      return { tpl: 'develops', cites: { develops: f.from }, squares: [], vars: { piece }, pd: `develops the ${piece}` }
+      return {
+        tpl: 'develops',
+        cites: { develops: f.from },
+        squares: [],
+        vars: { piece },
+        pd: `develops the ${piece}`,
+      }
     },
   },
   {
@@ -251,4 +269,7 @@ const excellentGeneric = rule({
 
 export const BEST_RULES: Rule[] = [...positiveRules('best'), generic('Generic', 'bestGeneric', 'bestGeneric')]
 export const EXCELLENT_RULES: Rule[] = [...positiveRules('excellent'), excellentGeneric]
-export const GOOD_RULES: Rule[] = [missedTactic('goodTactic'), generic('Generic', 'goodGeneric', 'goodGenericNoBest')]
+export const GOOD_RULES: Rule[] = [
+  missedTactic('goodTactic'),
+  generic('Generic', 'goodGeneric', 'goodGenericNoBest'),
+]

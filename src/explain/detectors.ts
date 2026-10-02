@@ -4,7 +4,8 @@ import { Chess, type Square, type Color, type Piece, type Move } from 'chess.js'
 export const VAL: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 99 }
 const RAY = new Set(['q', 'r', 'b'])
 const FILES = 'abcdefgh'
-const sq = (f: number, r: number) => (f < 0 || f > 7 || r < 0 || r > 7 ? null : ((FILES[f] + (r + 1)) as Square))
+const sq = (f: number, r: number) =>
+  f < 0 || f > 7 || r < 0 || r > 7 ? null : ((FILES[f] + (r + 1)) as Square)
 const fr = (s: Square) => [FILES.indexOf(s[0]), +s[1] - 1] as const
 const other = (c: Color): Color => (c === 'w' ? 'b' : 'w')
 
@@ -135,7 +136,8 @@ export function detectPinsAndSkewers(chess: Chess, color: Color) {
             first = { ...p, square: s }
             continue
           }
-          if (p.type === 'k') out.push({ type: 'pin', absolute: true, by: cell.square, pinned: first.square, to: s })
+          if (p.type === 'k')
+            out.push({ type: 'pin', absolute: true, by: cell.square, pinned: first.square, to: s })
           else if (VAL[p.type] > VAL[first.type])
             out.push({ type: 'pin', absolute: false, by: cell.square, pinned: first.square, to: s })
           else if (VAL[first.type] > VAL[p.type] || first.type === 'k')
@@ -154,7 +156,11 @@ export function newPinsAndSkewers(before: Chess, after: Chess, color: Color): Pi
 }
 
 /** Discovered attack/check: enemy pieces newly attacked by a piece OTHER than the mover. */
-export function detectDiscovered(before: Chess, after: Chess, mv: { from: Square; to: Square; color: Color }) {
+export function detectDiscovered(
+  before: Chess,
+  after: Chess,
+  mv: { from: Square; to: Square; color: Color },
+) {
   const res: Array<{ type: 'discoveredAttack' | 'discoveredCheck'; target: Square; by: Square[] }> = []
   for (const row of after.board())
     for (const cell of row) {
@@ -163,7 +169,11 @@ export function detectDiscovered(before: Chess, after: Chess, mv: { from: Square
       const was = before.attackers(cell.square, mv.color).filter((s) => s !== mv.from)
       const fresh = now.filter((s) => !was.includes(s))
       if (fresh.length)
-        res.push({ type: cell.type === 'k' ? 'discoveredCheck' : 'discoveredAttack', target: cell.square, by: fresh })
+        res.push({
+          type: cell.type === 'k' ? 'discoveredCheck' : 'discoveredAttack',
+          target: cell.square,
+          by: fresh,
+        })
     }
   return res
 }
@@ -211,10 +221,12 @@ export function backRankWeak(chess: Chess, color: Color): boolean {
 
 export function materialCount(c: Chess, color: Color) {
   let s = 0
-  for (const row of c.board()) for (const p of row) if (p && p.color === color && p.type !== 'k') s += VAL[p.type]
+  for (const row of c.board())
+    for (const p of row) if (p && p.color === color && p.type !== 'k') s += VAL[p.type]
   return s
 }
-export const materialDiff = (c: Chess, color: Color) => materialCount(c, color) - materialCount(c, other(color))
+export const materialDiff = (c: Chess, color: Color) =>
+  materialCount(c, color) - materialCount(c, other(color))
 
 // ---------------------------------------------------------------------------------------------------------------
 // Additional simple detectors (E.1, last paragraph). `mv` is the chess.js Move that led from `before` to `after`.
@@ -256,7 +268,13 @@ export function detectSacrifice(after: Chess, mv: MoveLike): { square: Square; v
       let hangsBigger = false
       for (const r2 of t.board())
         for (const c2 of r2)
-          if (c2 && c2.color !== mv.color && c2.type !== 'k' && VAL[c2.type] > VAL[cell.type] && enPrise(t, c2.square))
+          if (
+            c2 &&
+            c2.color !== mv.color &&
+            c2.type !== 'k' &&
+            VAL[c2.type] > VAL[cell.type] &&
+            enPrise(t, c2.square)
+          )
             hangsBigger = true
       if (hangsBigger) continue
       if (!best || VAL[cell.type] > best.value) best = { square: cell.square, value: VAL[cell.type] }

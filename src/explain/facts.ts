@@ -105,7 +105,8 @@ function tacticsOf(prev: Chess, next: Chess, m: Move): Motif[] {
   const fork = D.detectFork(next, m.to)
   if (fork) out.push(fork)
   for (const x of D.newPinsAndSkewers(prev, next, m.color)) {
-    if (x.type === 'pin') out.push({ type: 'pin', absolute: Boolean(x.absolute), by: x.by, pinned: x.pinned!, to: x.to! })
+    if (x.type === 'pin')
+      out.push({ type: 'pin', absolute: Boolean(x.absolute), by: x.by, pinned: x.pinned!, to: x.to! })
     else out.push({ type: 'skewer', by: x.by, front: x.front!, behind: x.behind! })
   }
   out.push(...D.detectDiscovered(prev, next, m))
@@ -175,14 +176,16 @@ export function buildMoveFacts(review: GameReview, ply: number, userColor: 'w' |
     else if (mv.piece !== 'p' && -playedLine.net >= REVIEW_CONFIG.brilliant.minSacrificePawnUnits)
       motifsPlayed.push({ type: 'sacrifice', square: mv.to, value: D.VAL[mv.piece] })
   }
-  if (mv.piece === 'p' && !mv.promotion && D.isPassedPawn(after, mv.to)) motifsPlayed.push({ type: 'passedPawn' })
+  if (mv.piece === 'p' && !mv.promotion && D.isPassedPawn(after, mv.to))
+    motifsPlayed.push({ type: 'passedPawn' })
   if (mv.promotion) motifsPlayed.push({ type: 'promotion' })
   if (mv.isKingsideCastle()) motifsPlayed.push({ type: 'castleKing' })
   if (mv.isQueensideCastle()) motifsPlayed.push({ type: 'castleQueen' })
   if (D.develops(mv, moveNumber)) motifsPlayed.push({ type: 'develops' })
   if (mv.captured && prev && prev.san.includes('x') && prev.uci.slice(2, 4) === mv.to)
     motifsPlayed.push({ type: 'recapture' })
-  if (mv.captured && playedLine.captures >= 2 && playedLine.net === 0) motifsPlayed.push({ type: 'equalTrade' })
+  if (mv.captured && playedLine.captures >= 2 && playedLine.net === 0)
+    motifsPlayed.push({ type: 'equalTrade' })
   if (D.detectKick(after, mv)) motifsPlayed.push({ type: 'kicks' })
   if (D.detectTempo(after, mv)) motifsPlayed.push({ type: 'winsTempo' })
   if (D.defendedSquares(before, after, mv).length) motifsPlayed.push({ type: 'defends' })
@@ -194,16 +197,24 @@ export function buildMoveFacts(review: GameReview, ply: number, userColor: 'w' |
   if (hung.length) motifsAllowed.push({ type: 'hangs', squares: hung })
   for (const x of D.newPinsAndSkewers(before, after, opp)) {
     if (x.type === 'pin')
-      motifsAllowed.push({ type: 'pin', absolute: Boolean(x.absolute), by: x.by, pinned: x.pinned!, to: x.to! })
+      motifsAllowed.push({
+        type: 'pin',
+        absolute: Boolean(x.absolute),
+        by: x.by,
+        pinned: x.pinned!,
+        to: x.to!,
+      })
     else motifsAllowed.push({ type: 'skewer', by: x.by, front: x.front!, behind: x.behind! })
   }
   if (replySan) {
     const afterReply = new Chess(p.after)
     const reply = afterReply.move(replySan)
     const seen = new Set(motifsAllowed.map((m) => JSON.stringify(m)))
-    for (const m of tacticsOf(after, afterReply, reply)) if (!seen.has(JSON.stringify(m))) motifsAllowed.push(m)
+    for (const m of tacticsOf(after, afterReply, reply))
+      if (!seen.has(JSON.stringify(m))) motifsAllowed.push(m)
   }
-  if (D.backRankWeak(after, color) && !D.backRankWeak(before, color)) motifsAllowed.push({ type: 'backRankWeak' })
+  if (D.backRankWeak(after, color) && !D.backRankWeak(before, color))
+    motifsAllowed.push({ type: 'backRankWeak' })
 
   // What the engine's best move would have done.
   let motifsBest: Motif[] = []
@@ -215,7 +226,8 @@ export function buildMoveFacts(review: GameReview, ply: number, userColor: 'w' |
 
   let opening: MoveFacts['opening']
   const found = safeLookup(p.after)
-  if (found) opening = { eco: found.eco, name: found.name, isNewName: safeLookup(p.before)?.name !== found.name }
+  if (found)
+    opening = { eco: found.eco, name: found.name, isNewName: safeLookup(p.before)?.name !== found.name }
 
   return {
     ply,
@@ -266,4 +278,3 @@ export function buildMoveFacts(review: GameReview, ply: number, userColor: 'w' |
     fenAfter: p.after,
   }
 }
-

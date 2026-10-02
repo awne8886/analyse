@@ -47,7 +47,12 @@ export const losesCastling = rule({
   prove: (f) => {
     const b = boards(f)
     if (!b || !castlingRightsLost(b.before, b.after, b.move)) return null
-    return { tpl: 'losesCastling', cites: { castlingRightsLost: true, loss: f.loss }, squares: [f.from], vars: {} }
+    return {
+      tpl: 'losesCastling',
+      cites: { castlingRightsLost: true, loss: f.loss },
+      squares: [f.from],
+      vars: {},
+    }
   },
 })
 
