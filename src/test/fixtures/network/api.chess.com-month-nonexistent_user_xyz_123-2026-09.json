@@ -1,0 +1,10 @@
+{
+  "url": "https://api.chess.com/pub/player/nonexistent_user_xyz_123/games/2026/09",
+  "status": 404,
+  "contentType": "application/json; charset=utf-8",
+  "acao": "*",
+  "body": {
+    "code": 0,
+    "message": "User \"nonexistent_user_xyz_123\" not found."
+  }
+}

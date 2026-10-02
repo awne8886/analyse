@@ -1,0 +1,103 @@
+{
+  "url": "https://lichess.org/game/export/6kcoXS0y?pgnInJson=true&clocks=true&evals=false&opening=true&accuracy=true",
+  "status": 200,
+  "contentType": "application/json",
+  "acao": "*",
+  "body": {
+    "id": "6kcoXS0y",
+    "rated": true,
+    "variant": "crazyhouse",
+    "speed": "blitz",
+    "perf": "crazyhouse",
+    "createdAt": 1790964738725,
+    "lastMoveAt": 1790964944736,
+    "status": "resign",
+    "source": "lobby",
+    "players": {
+      "white": {
+        "user": {
+          "name": "PekkaBlunder",
+          "id": "pekkablunder"
+        },
+        "rating": 2240,
+        "ratingDiff": 8
+      },
+      "black": {
+        "user": {
+          "name": "blitzeur88",
+          "id": "blitzeur88"
+        },
+        "rating": 2387,
+        "ratingDiff": -8
+      }
+    },
+    "winner": "white",
+    "opening": {
+      "eco": "D02",
+      "name": "Queen's Pawn Game: Zukertort Variation",
+      "ply": 3
+    },
+    "moves": "d4 d5 Nf3 Bf5 h3 e6 g3 Nf6 Bg2 Bd6 Bg5 Nbd7 Nc3 O-O O-O h6 Bxf6 Nxf6 N@e5 B@e4 Nxe4 Nxe4 Nh4 Bh7 B@h5 Qe7 Bxf7+ Rxf7 P@g6 Bxe5 gxh7+ Kxh7 B@g6+ Kg8 Bxf7+ Qxf7 dxe5 Nxg3 B@g6 P@h2+ Kxh2 Nxf1+ Qxf1 Qf4+ P@g3 Qxe5 Bxd5 N@e7 P@f7+ Kf8 R@e8+",
+    "clocks": [
+      500,
+      500,
+      949,
+      755,
+      1451,
+      1179,
+      1891,
+      1619,
+      2395,
+      2027,
+      2819,
+      2331,
+      3395,
+      2627,
+      3227,
+      3003,
+      3531,
+      3499,
+      3723,
+      3443,
+      3827,
+      3715,
+      3955,
+      3595,
+      3923,
+      2803,
+      4227,
+      3147,
+      4579,
+      3235,
+      4779,
+      3603,
+      4763,
+      3899,
+      5051,
+      4043,
+      5339,
+      3763,
+      5451,
+      3859,
+      5699,
+      4363,
+      6027,
+      4067,
+      6147,
+      3227,
+      5187,
+      1763,
+      4907,
+      2003,
+      5165,
+      1803
+    ],
+    "pgn": "[Event \"rated variant:crazyhouse game\"]\n[Site \"https://lichess.org/6kcoXS0y\"]\n[Date \"2026.10.02\"]\n[Round \"-\"]\n[White \"PekkaBlunder\"]\n[Black \"blitzeur88\"]\n[Result \"1-0\"]\n[GameId \"6kcoXS0y\"]\n[UTCDate \"2026.10.02\"]\n[UTCTime \"18:12:18\"]\n[WhiteElo \"2240\"]\n[BlackElo \"2387\"]\n[WhiteRatingDiff \"+8\"]\n[BlackRatingDiff \"-8\"]\n[Variant \"Crazyhouse\"]\n[TimeControl \"0+5\"]\n[ECO \"D02\"]\n[Opening \"Queen's Pawn Game: Zukertort Variation\"]\n[Termination \"Normal\"]\n\n1. d4 { [%clk 0:00:05] } 1... d5 { [%clk 0:00:05] } 2. Nf3 { [%clk 0:00:09] } 2... Bf5 { [%clk 0:00:08] } 3. h3 { [%clk 0:00:15] } 3... e6 { [%clk 0:00:12] } 4. g3 { [%clk 0:00:19] } 4... Nf6 { [%clk 0:00:16] } 5. Bg2 { [%clk 0:00:24] } 5... Bd6 { [%clk 0:00:20] } 6. Bg5 { [%clk 0:00:28] } 6... Nbd7 { [%clk 0:00:23] } 7. Nc3 { [%clk 0:00:34] } 7... O-O { [%clk 0:00:26] } 8. O-O { [%clk 0:00:32] } 8... h6 { [%clk 0:00:30] } 9. Bxf6 { [%clk 0:00:35] } 9... Nxf6 { [%clk 0:00:35] } 10. N@e5 { [%clk 0:00:37] } 10... B@e4 { [%clk 0:00:34] } 11. Nxe4 { [%clk 0:00:38] } 11... Nxe4 { [%clk 0:00:37] } 12. Nh4 { [%clk 0:00:40] } 12... Bh7 { [%clk 0:00:36] } 13. B@h5 { [%clk 0:00:39] } 13... Qe7 { [%clk 0:00:28] } 14. Bxf7+ { [%clk 0:00:42] } 14... Rxf7 { [%clk 0:00:31] } 15. P@g6 { [%clk 0:00:46] } 15... Bxe5 { [%clk 0:00:32] } 16. gxh7+ { [%clk 0:00:48] } 16... Kxh7 { [%clk 0:00:36] } 17. B@g6+ { [%clk 0:00:48] } 17... Kg8 { [%clk 0:00:39] } 18. Bxf7+ { [%clk 0:00:51] } 18... Qxf7 { [%clk 0:00:40] } 19. dxe5 { [%clk 0:00:53] } 19... Nxg3 { [%clk 0:00:38] } 20. B@g6 { [%clk 0:00:55] } 20... P@h2+ { [%clk 0:00:39] } 21. Kxh2 { [%clk 0:00:57] } 21... Nxf1+ { [%clk 0:00:44] } 22. Qxf1 { [%clk 0:01:00] } 22... Qf4+ { [%clk 0:00:41] } 23. P@g3 { [%clk 0:01:01] } 23... Qxe5 { [%clk 0:00:32] } 24. Bxd5 { [%clk 0:00:52] } 24... N@e7 { [%clk 0:00:18] } 25. P@f7+ { [%clk 0:00:49] } 25... Kf8 { [%clk 0:00:20] } 26. R@e8+ { [%clk 0:00:52] } 1-0\n\n\n",
+    "clock": {
+      "initial": 0,
+      "increment": 5,
+      "totalTime": 200
+    },
+    "division": {}
+  }
+}
