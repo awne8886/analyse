@@ -1,6 +1,6 @@
 # PLAN
 
-Build of "Analyse" per PROMPT.md. Current phase: **0a (scaffold and contracts)**.
+Build of "Analyse" per PROMPT.md. Current phase: **0b (fixtures and red tests)**.
 
 ## Requirements checklist (R1 to R34)
 
@@ -77,3 +77,9 @@ Build of "Analyse" per PROMPT.md. Current phase: **0a (scaffold and contracts)**
 
 | Name | Phase | Type | Branch | Status |
 |---|---|---|---|---|
+| fixtures-import | 0b | general-purpose (sonnet) | main checkout | running |
+| fixtures-engine | 0b | general-purpose (sonnet) | main checkout | running |
+| fixtures-analysis | 0b | general-purpose (sonnet) | main checkout | running |
+| fixtures-explain | 0b | general-purpose (sonnet) | main checkout | running |
+| fixtures-ui | 0b | general-purpose (sonnet) | main checkout | running |
+| fixtures-api | 0b | general-purpose (sonnet) | main checkout | running |
