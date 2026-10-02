@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-pages
+.claude/worktrees/
+playwright-report
+test-results
+.vitest
+coverage
+*.tsbuildinfo

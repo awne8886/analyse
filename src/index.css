@@ -1,0 +1,59 @@
+@import 'tailwindcss';
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light theme */
+:root {
+  --color-classification-brilliant: #109888;
+  --color-classification-great: #486688;
+  --color-classification-best: #5d9948;
+  --color-classification-excellent: #5d9948;
+  --color-classification-good: #95b776;
+  --color-classification-book: #8d694b;
+  --color-classification-inaccuracy: #e3aa24;
+  --color-classification-mistake: #dd7c2c;
+  --color-classification-miss: #ff7769;
+  --color-classification-blunder: #e02828;
+  --color-classification-forced: #96af8b;
+  --color-page: #f1f1f1;
+  --color-panel: #ffffff;
+  --color-border: #dad8d6;
+  --color-text: #262421;
+  --color-text-muted: #4b4847;
+  --color-board-light: #eeeed2;
+  --color-board-dark: #769656;
+  --color-last-move: rgba(255, 255, 0, 0.5);
+  --color-arrow-best: rgba(159, 207, 63, 0.64);
+  --color-arrow-threat: rgba(203, 52, 48, 0.8);
+  --color-phase-middlegame: #ffa459;
+  --color-phase-endgame: #649bf6;
+  --font-heading:
+    'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Helvetica, Arial, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Helvetica, Arial, sans-serif;
+}
+
+/* Dark theme (default: <html class="dark">) */
+.dark {
+  --color-classification-brilliant: #26c2a3;
+  --color-classification-great: #749bbf;
+  --color-classification-best: #81b64c;
+  --color-classification-excellent: #81b64c;
+  --color-classification-good: #95b776;
+  --color-classification-book: #d5a47d;
+  --color-classification-inaccuracy: #f7c631;
+  --color-classification-mistake: #ffa459;
+  --color-classification-miss: #ff7769;
+  --color-classification-blunder: #fa412d;
+  --color-classification-forced: #96af8b;
+  --color-page: #312e2b;
+  --color-panel: #262522;
+  --color-border: #3d3a37;
+  --color-text: #e8e6e3;
+  --color-text-muted: #8b8987;
+}
+
+body {
+  margin: 0;
+  background: var(--color-page);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
