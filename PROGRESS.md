@@ -44,3 +44,29 @@ ffmpeg (Appendix I): available (/usr/bin/ffmpeg); 9 mp3 written.
 react-refresh configs.vite (Appendix I): exists (scout-packages + Gate 0 lint).
 openings key count (Appendix I): 3815.
 LICENSE: GPL text from line 10 is byte-identical to public/engine/sf19/Copying.txt (cmp).
+
+## 2026-10-02 Gate 0 (scaffold + red tests)
+
+```
+$ npm run lint
+> analyse@1.0.0 lint
+> eslint .
+exit 0
+$ npm run typecheck
+> analyse@1.0.0 typecheck
+> tsc -b
+exit 0
+$ npm run build
+dist/assets/index-DL0bCbGL.css                           10.96 kB │ gzip:  2.96 kB
+dist/assets/index-4gNk-4dK.js                           219.85 kB │ gzip: 68.70 kB
+✓ built in 450ms
+exit 0
+$ npx vitest run --reporter=dot
+      Tests  735 failed (735)
+   Start at  22:57:20
+   Duration  10.06s (environment 71%, setup 13%, transform 8%, tests 5%, import 2%, worker 1%)
+$ cat .claude/settings.json
+{ "worktree": { "baseRef": "head" } }
+```
+
+Failure classification (vitest JSON reporter): 19 test files, 735 tests, all red: 649 with "Error: not implemented" (stubs), 86 snapshot/table mismatches against the stub tables (src/ui/strings.test.ts 85, src/import/errors.test.ts 1). No other failure kind. Note: the recorded network fixtures already existed (Phase 1 overlapped, PLAN Assumption 14), so no test failed for a missing fixture file.

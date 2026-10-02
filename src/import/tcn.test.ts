@@ -95,7 +95,7 @@ describe('decodeTcn (A.2 decoder)', () => {
   })
 
   it('a character outside the alphabet throws', () => {
-    expect(() => decodeTcn('mCéé')).toThrow()
+    expect(() => decodeTcn('mCéé')).toThrow(/bad TCN char/)
   })
 })
 
@@ -260,13 +260,15 @@ describe('recorded games (network fixtures)', () => {
     }
   })
 
-  it('gothamchess 2026/09 holds 75 promotions in total (A.3)', () => {
+  it('gothamchess 2026/09: the promotions decoded from all tcn strings equal those written in the pgn texts', () => {
+    // A.3 notes 75 promotions in the whole month; the recorded file may hold fewer games, so the count is derived
     const month = loadNetworkFixture('api.chess.com-month-gothamchess-2026-09').body as {
       games: ArchiveGame[]
     }
-    const total = month.games
-      .filter((g) => g.tcn)
-      .reduce((n, g) => n + decodeTcn(g.tcn!).filter((m) => m.promotion).length, 0)
-    expect(total).toBe(75)
+    const games = month.games.filter((g) => g.tcn && g.pgn && g.rules === 'chess')
+    const fromTcn = games.reduce((n, g) => n + decodeTcn(g.tcn!).filter((m) => m.promotion).length, 0)
+    const fromPgn = games.reduce((n, g) => n + (g.pgn!.match(/=[QRBN]/g) ?? []).length, 0)
+    expect(fromTcn).toBeGreaterThan(0)
+    expect(fromTcn).toBe(fromPgn)
   })
 })

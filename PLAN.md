@@ -41,7 +41,7 @@ Build of "Analyse" per PROMPT.md. Current phase: **0b (fixtures and red tests)**
 
 ## Gates
 
-- [ ] Gate 0 (scaffold + red tests)
+- [x] Gate 0 (scaffold + red tests): 19 red test files, 735 failing tests (649 not implemented, 86 stub-table mismatches)
 - [x] Gate 1 (vendor + scouts)
 - [ ] Gate 2 (per agent)
 - [ ] Gate 3 (integration)
@@ -68,6 +68,8 @@ Build of "Analyse" per PROMPT.md. Current phase: **0b (fixtures and red tests)**
 16. **Explain open questions (fixtures-explain):** (a) E.3's "a Blunder never yields a sentence containing 'wins'" beats E.4's HangsPiece wording: the impersonal HangsPiece variant reads "...; {reply} simply takes it." (b) `MoveFacts` gains optional `fenBefore` / `fenAfter` (lead edit to `src/types/explain.ts` before Phase 2) so templates can name the piece on a motif square. (c) E.4 has no generic Excellent sentence: impl-explain writes an original one ("Nearly as strong as the engine's choice." style), and Excellent's bestLine appears only when a best-move tactic description exists.
 17. **Key-moment dedupe** "within 2 plies" = a ply distance of 2 or less is dropped (3 is kept), as pinned by `keyMoments.test.ts`. The phases test's mixedness values (51, 87, 117, 163, 41) were re-derived independently by the lead from B.7 with a separate script and match.
 18. **Engine under Node.** The vendored loaders are CommonJS but the repo is `"type": "module"`, so `node public/engine/sf19/stockfish-19-lite-single.js` fails (`require is not defined in ES module scope`). `public/` stays exactly the R10 file set; `scripts/record-evals.mjs` copies the loader to a temp dir as `.cjs` (with the `.wasm` beside it under the matching name) and spawns that.
+19. **Phase 0b test files (19, all red at Gate 0):** src/import/{parseInput,tcn,variantGate,errors}.test.ts (201), src/engine/{parseInfo,deviceProfile,calibrate}.test.ts (91), src/analysis/{winPercent,classify,accuracy,rating,phases,keyMoments}.test.ts (82), src/explain/{detectors,explain}.test.ts (160), src/state/{urlState,settingsStore}.test.ts + src/ui/strings.test.ts (163), api/chesscom.test.ts (38). Expected failure count before Phase 2: 735.
+20. **Live ids vs time (fixtures-import):** the tohayes recordings show live ids that are not monotonic in time (174531660852 ended 2026-09-15, 173846034210 on 2026-09-01, while the anchor 183193101523 is 2026-09-08), so the A.5 prediction can miss; the 3-month scan then ends with P-9 and the PGN path. Kept as specified; follow-up below.
 
 ## Spec-gap resolutions (from docs/research/spec-gaps.md; binding for Phase 2)
 
@@ -75,7 +77,7 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 
 ## Follow-ups
 
-(none yet)
+- A.5 live-id month prediction can miss games whose ids are out of time order (oddschess/variant ids seen in tohayes 2026/09); consider widening the scan or keying anchors per game type.
 
 ## Review triage
 
@@ -85,7 +87,7 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 
 | Name | Phase | Type | Branch | Status |
 |---|---|---|---|---|
-| fixtures-import | 0b | general-purpose (sonnet) | main checkout | running |
+| fixtures-import | 0b | general-purpose (sonnet) | main checkout | done |
 | fixtures-engine | 0b | general-purpose (sonnet) | main checkout | done |
 | fixtures-analysis | 0b | general-purpose (sonnet) | main checkout | done |
 | fixtures-explain | 0b | general-purpose (sonnet) | main checkout | done |

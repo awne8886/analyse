@@ -4,7 +4,7 @@
 // (or the raw text when the upstream body was not JSON). Load them inside a test body, never with a static
 // import, so one missing file fails one test.
 import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
+import { URL as NodeURL, fileURLToPath } from 'node:url'
 
 export interface NetworkFixture {
   url: string
@@ -14,7 +14,7 @@ export interface NetworkFixture {
   body: unknown
 }
 
-const NETWORK_DIR = fileURLToPath(new URL('./fixtures/network/', import.meta.url))
+const NETWORK_DIR = fileURLToPath(new NodeURL('./fixtures/network/', import.meta.url))
 
 export function loadNetworkFixture(name: string): NetworkFixture {
   const file = name.endsWith('.json') ? name : `${name}.json`
@@ -32,5 +32,5 @@ export function fixtureResponse(f: NetworkFixture): Response {
 
 /** Reads any file relative to src/test/fixtures/ (e.g. 'pgn/multi.pgn'). */
 export function readFixtureText(relPath: string): string {
-  return readFileSync(fileURLToPath(new URL(`./fixtures/${relPath}`, import.meta.url)), 'utf8')
+  return readFileSync(fileURLToPath(new NodeURL(`./fixtures/${relPath}`, import.meta.url)), 'utf8')
 }
