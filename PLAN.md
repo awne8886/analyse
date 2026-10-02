@@ -66,6 +66,10 @@ Build of "Analyse" per PROMPT.md. Current phase: **0b (fixtures and red tests)**
 14. **Phase overlap.** To save wall-clock time, Phase 1 agents are launched as soon as Phase 0b slots free up (never more than 6 running); their owned paths are disjoint from Phase 0b's. Gate 0 is evaluated on the Phase 0b tests only.
 15. **`calibrate(pool)` reads nps** through an engine-internal method `measureNps(): Promise<number>` that the pool object returned by `createEnginePool` implements (it sends `position startpos` + `go depth 12` on the first ready worker and returns `nps` of the last complete `info` line). `calibrate` maps it with `tierForNps`, stores `{ nps, tier, at }` under `analyse:engineTier` (reused 7 days) and returns the tier; on an `EngineApi` without `measureNps` (the mock engine) it returns the provisional tier `standard-16` and sends nothing.
 
+## Spec-gap resolutions (from docs/research/spec-gaps.md; binding for Phase 2)
+
+All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as written: (1) preMistakeWin = 100 - previous.winBefore, gain = winBefore - preMistakeWin; (2) checkmate winAfter 100 loss 0, draw winAfter 50, DrawFromWinning final; (3) Great exclusions via E.1 isDefended / pieceValues / canBeTakenByLowerPiece; (4) customStart never Book, Forced before Book, EPD from chess.js fen(); (5) phaseStarts 0-based board index, Book/Forced = 100 and counted, not-analysed excluded; (6) ACPL definition, fallback round50 + clamp; (7) one rating.method: regression > acpl > none; (8) Miss (a) before (b); (9) Brilliant needs loss <= 2, Great independent; (10) Retry uses line scores via the single mover-POV rule, Book off in Retry.
+
 ## Follow-ups
 
 (none yet)
