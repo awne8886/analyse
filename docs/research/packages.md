@@ -139,3 +139,17 @@ peerDependencies = { eslint: '^10.0.0' }
 version = '7.0.1'
 peerDependencies = { vitest: '>= 0.32', '@testing-library/dom': '>=10 <11' }
 ```
+
+## scout-packages confirmations (Phase 1)
+
+- typescript-eslint 8.71.0 peer `typescript: >=4.8.4 <6.1.0`: TS ~6.0.3 is fine.
+- chess.js 1.4.0: `attackers`, `findPiece`, `getCastlingRights(color) -> {k, q}`, `loadPgn(pgn, {strict?, newlineChar?})`, `load(fen, {skipValidation?, preserveHeaders?})`, verbose `history()` Move with `before`, `after`, `lan`, `isKingsideCastle()`, `isQueensideCastle()`, `isEnPassant()`, `isPromotion()`, `isCapture()`; no `isCastle()`. `isThreefoldRepetition`, `isDrawByFiftyMoves`, `isInsufficientMaterial` present.
+- eslint-plugin-react-refresh: default export has `configs.vite` (a Config object); eslint-plugin-react-hooks: `configs.flat.recommended` exists.
+- zustand 5: `persist`, `createJSONStorage` from `zustand/middleware`.
+- react-chessboard 5.12.1: `<Chessboard options={...} />`; all ten keys exist (`position, boardOrientation, allowDragging, arrows, squareStyles, squareRenderer, pieces, animationDurationInMs, showAnimations, id`).
+  - `arrows?: { startSquare: string; endSquare: string; color: string }[]`
+  - `squareRenderer?: ({ piece, square, children }: { piece: { pieceType: string } | null; square: string; children?: ReactNode }) => JSX.Element` (receives `children`)
+  - `pieces?: Record<string, (props?: { fill?: string; square?: string; svgStyle?: CSSProperties }) => JSX.Element>` (keys `wP` ... `bK`)
+  - `onPieceDrop?: ({ piece: { isSparePiece; position; pieceType }, sourceSquare, targetSquare: string | null }) => boolean`
+  - `onSquareClick?: ({ piece, square }) => void`
+  - other option names: `squareStyle`, `darkSquareStyle`, `lightSquareStyle`, `allowDrawingArrows`, `onArrowsChange`, `clearArrowsOnPositionChange`, `canDragPiece`.
