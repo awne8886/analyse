@@ -105,5 +105,5 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 | impl-import | 2 | general-purpose (inherit) | worktree-agent-a797c52c6ecf65e5e @ 63f7665 | merged |
 | impl-analysis | 2 | general-purpose (inherit) | worktree-agent-a2500c47c9eafbd4d @ 6fdd440 | merged (before impl-import: disjoint paths, merged as it arrived) |
 | impl-explain | 2 | general-purpose (inherit) | worktree-agent-a120e6c225c5dd86c @ 49363b6 | merged |
-| impl-ui | 2 | general-purpose (inherit) | worktree | running |
+| impl-ui | 2 | general-purpose (inherit) | worktree-agent-ad98a86a3637f9fb6 @ b914ae4 | merged |
 | impl-deploy | 2 | general-purpose (inherit) | worktree | running |
