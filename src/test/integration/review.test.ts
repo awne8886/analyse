@@ -49,10 +49,9 @@ async function review(link: string, gameId: string): Promise<{ game: ImportedGam
   if (!res.ok) throw new Error(`import failed: ${res.error.code} ${res.error.message}`)
   expect(res.game.id).toBe(gameId)
   mockWindow.__USE_MOCK_ENGINE__ = true
-  mockWindow.__MOCK_EVALS__ = JSON.parse(readFixtureText(`evals/${gameId}.json`)) as Record<
-    string,
-    PositionEval
-  >
+  mockWindow.__MOCK_EVALS__ = JSON.parse(
+    readFixtureText(`evals/${gameId.replaceAll(':', '_')}.json`),
+  ) as Record<string, PositionEval>
   const engine = createEnginePool(PROFILE)
   await engine.init(PROFILE)
   const r = await analyzeGame(res.game, engine, PROFILE, {
