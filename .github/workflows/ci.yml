@@ -1,0 +1,39 @@
+name: CI
+on: { push: { branches: [main] }, pull_request: {} }
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: node scripts/vendor-engine.mjs --check
+      - run: grep -q coepdegrade public/coi-serviceworker.min.js
+      - run: npm run lint
+      - run: npm run format
+      - run: npm run typecheck
+      - run: npm test -- --coverage
+      - run: npm run build
+      - run: test "$(grep -c coi-serviceworker dist/index.html)" = "0"
+      - run: npm run build:pages
+      - run: test "$(grep -c coi-serviceworker dist-pages/index.html)" = "1"
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: 24, cache: npm }
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium webkit
+      - run: npx playwright test
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+            e2e/screenshots/
+          retention-days: 14
