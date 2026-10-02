@@ -52,7 +52,7 @@ Build of "Analyse" per PROMPT.md. Current phase: **2 (implement; six worktree ag
 
 1. **Branch instead of `main`.** This cloud session must develop and push only on `claude/chess-review-website-y8cb15` (session instruction). Every "commit on `main`" / "`git push origin main`" in PROMPT.md is applied to that branch; the final step opens a draft PR into `main`. Nothing is pushed to `main` directly.
 2. **Node 24.** The container shipped Node 22.22.0; Node 24.21.0 LTS (npm 11.19.0) was installed under `/opt/node24` and put first on `PATH` (original binaries kept as `*22.orig`).
-3. **`.claude/settings.json` created mid-session** (it did not exist at launch). Its effect on worktree spawns is unverified; the template's `wrong base` check catches a failure. Worktree agents are additionally told to `git reset --hard <sha>` once if their worktree starts from the wrong commit (the worktree shares this repository's object store, so the commit is present) and to report `wrong base` only if that fails.
+3. **`.claude/settings.json` created mid-session** (it did not exist at launch). Verified in Phase 2: impl-engine's worktree started at the lead's HEAD 67e3344, so the setting is honoured; the template's `wrong base` check catches a failure. Worktree agents are additionally told to `git reset --hard <sha>` once if their worktree starts from the wrong commit (the worktree shares this repository's object store, so the commit is present) and to report `wrong base` only if that fails.
 4. **Copyright author `awne8886`.** `git config user.name` prints `Claude`, which is the cloud container's agent identity, not the human author; the rule's fallback (the repository owner `awne8886`) is used in `LICENSE` and `THIRD_PARTY_LICENSES.md`.
 5. **Playwright browsers.** The container has only Chromium (revision 1194, from Playwright 1.56.1) under `/opt/pw-browsers` and its instructions forbid `playwright install`. Locally the Chromium project runs with `PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome` (an opt-in `executablePath` in `playwright.config.ts`); the WebKit project cannot run in this container and is exercised by `ci.yml` (which installs both browsers). Gate commands that need WebKit are recorded as "CI only" in PROGRESS.md.
 6. **Extra devDependencies** demanded by the tests (allowed by section 3.1): `@testing-library/dom` (peer of `@testing-library/react` 16), `@testing-library/jest-dom`, `@testing-library/user-event`, `fake-indexeddb` (IndexedDB in jsdom). `@types/node` pinned to `^24` (Node 24 runtime), `js-yaml ^5.4.2` + `@types/js-yaml ^4.0.9` (what `npm view` reported).
@@ -70,6 +70,7 @@ Build of "Analyse" per PROMPT.md. Current phase: **2 (implement; six worktree ag
 18. **Engine under Node.** The vendored loaders are CommonJS but the repo is `"type": "module"`, so `node public/engine/sf19/stockfish-19-lite-single.js` fails (`require is not defined in ES module scope`). `public/` stays exactly the R10 file set; `scripts/record-evals.mjs` copies the loader to a temp dir as `.cjs` (with the `.wasm` beside it under the matching name) and spawns that.
 19. **Phase 0b test files (19, all red at Gate 0):** src/import/{parseInput,tcn,variantGate,errors}.test.ts (201), src/engine/{parseInfo,deviceProfile,calibrate}.test.ts (91), src/analysis/{winPercent,classify,accuracy,rating,phases,keyMoments}.test.ts (82), src/explain/{detectors,explain}.test.ts (160), src/state/{urlState,settingsStore}.test.ts + src/ui/strings.test.ts (163), api/chesscom.test.ts (38). Expected failure count before Phase 2: 735.
 20. **Live ids vs time (fixtures-import):** the tohayes recordings show live ids that are not monotonic in time (174531660852 ended 2026-09-15, 173846034210 on 2026-09-01, while the anchor 183193101523 is 2026-09-08), so the A.5 prediction can miss; the 3-month scan then ends with P-9 and the PGN path. Kept as specified; follow-up below.
+21. **Engine cancellation semantics (impl-engine):** evaluate() promises cancelled by stop()/dispose()/a newer jobId reject with `name === 'AbortError'`; the watchdog give-up resolves `notAnalysed: true`; loading percent is 0..1; calibrate on the mock engine returns 'auto-18' (mock measureNps = 1,000,000, docs/notes/contracts.md), superseding the 'standard-16' wording of Assumption 15 for the mock.
 
 ## Spec-gap resolutions (from docs/research/spec-gaps.md; binding for Phase 2)
 
@@ -97,7 +98,7 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 | vendor-assets | 1 | general-purpose (sonnet) | main checkout | done |
 | scout-spec | 1 | Explore | - | done (0 fixture mismatches) |
 | scout-packages | 1 | Explore | - | done |
-| impl-engine | 2 | general-purpose (inherit) | worktree (branch reported on completion) | running |
+| impl-engine | 2 | general-purpose (inherit) | worktree-agent-a62fcdf3378209847 @ fb7521e | merged |
 | impl-import | 2 | general-purpose (inherit) | worktree | running |
 | impl-analysis | 2 | general-purpose (inherit) | worktree | running |
 | impl-explain | 2 | general-purpose (inherit) | worktree | running |
