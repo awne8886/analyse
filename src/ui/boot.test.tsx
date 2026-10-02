@@ -5,7 +5,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { analyzeGame } from '../analysis'
 import { calibrate, createEnginePool } from '../engine'
 import { importGame } from '../import'
-import type { DeviceProfile, EngineApi } from '../types/engine'
+import type { DeviceProfile } from '../types/engine'
+import type { EngineHandle } from '../engine'
 import { fixtureGame, fixtureReview } from './test-fixtures'
 
 vi.mock('../import', () => ({
@@ -46,8 +47,9 @@ const DESKTOP: DeviceProfile = {
   multiPv: 2,
 }
 
-function fakePool(): EngineApi {
+function fakePool(): EngineHandle {
   return {
+    measureNps: vi.fn(async () => 1_000_000),
     init: vi.fn(async () => undefined),
     evaluate: vi.fn(),
     stop: vi.fn(async () => undefined),

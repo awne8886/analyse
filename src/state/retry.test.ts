@@ -4,7 +4,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { classifyPly } from '../analysis'
 import { calibrate, createEnginePool } from '../engine'
-import type { DeviceProfile, EngineApi, PositionEval } from '../types/engine'
+import type { DeviceProfile, PositionEval } from '../types/engine'
+import type { EngineHandle } from '../engine'
 import { fixtureGame, fixtureReview } from '../ui/test-fixtures'
 import { __resetSessionForTests, bootApp } from './controller'
 import { startRetry, tryRetryMove, useReviewStore } from './index'
@@ -72,7 +73,8 @@ describe('tryRetryMove (G.4)', () => {
       multiPv: 1,
       bestmove: 'e4d5',
     }
-    const pool: EngineApi = {
+    const pool: EngineHandle = {
+      measureNps: vi.fn(async () => 1_000_000),
       init: vi.fn(async () => undefined),
       evaluate: vi.fn(async () => searched),
       stop: vi.fn(async () => undefined),

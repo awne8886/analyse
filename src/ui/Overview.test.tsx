@@ -53,11 +53,12 @@ describe('Overview (G.2)', () => {
   })
 
   it('shows the players, the result and the summary', () => {
+    useSettingsStore.getState().update({ voice: 'neutral' })
     render(<Overview />)
     expect(screen.getByTestId('player-white-name')).toHaveTextContent('Arystanner')
     expect(screen.getByTestId('player-black-name')).toHaveTextContent('Hikaru')
     expect(screen.getByTestId('result')).toHaveTextContent('1-0')
-    expect(screen.getByTestId('summary')).toHaveTextContent('White played with 87% accuracy')
+    expect(screen.getByTestId('summary')).toHaveTextContent('White played with 87.0% accuracy')
     const avatar = screen.getByTestId('player-white').querySelector('img') as HTMLImageElement
     expect(avatar.getAttribute('crossorigin')).toBe('anonymous')
     expect(avatar.getAttribute('referrerpolicy')).toBe('no-referrer')
