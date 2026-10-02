@@ -73,6 +73,7 @@ Build of "Analyse" per PROMPT.md. Current phase: **2 (implement; six worktree ag
 21. **Engine cancellation semantics (impl-engine):** evaluate() promises cancelled by stop()/dispose()/a newer jobId reject with `name === 'AbortError'`; the watchdog give-up resolves `notAnalysed: true`; loading percent is 0..1; calibrate on the mock engine returns 'auto-18' (mock measureNps = 1,000,000, docs/notes/contracts.md), superseding the 'standard-16' wording of Assumption 15 for the mock.
 22. **Test correction (lead, not a weakening):** `src/import/errors.test.ts` expected `'I-27': 'error'` and `'I-27b': 'Please only run 1 request(s) at a time'` (the lichess 429 body from the F.1 "Input and detection" column). The expected values were corrected to the F.1 string column ("Lichess is rate-limiting requests. Retrying in 60 s…" / "Lichess is still rate-limiting requests. Wait a minute and try again."), which is what the appendix pins. `ImportOptions` gained an optional `wait(ms)` (impl-import).
 23. **Container restart during Phase 2** killed impl-explain, impl-ui and impl-deploy mid-run. Their uncommitted worktree changes were committed by the lead as WIP commits on their own branches (5b81dda, 1b2c052, f5a47ec) and the three agents were resumed from their transcripts. Node 24 under /opt survived the restart.
+24. **Explain depth gate:** below `min(depthTarget, 14)` only rules naming material, mate or a motif are suppressed (section 3.8 "tactical rules"); board-fact rules (Checkmate, Castles, Develops, Recapture, Promotion, PassedPawn, Book, Forced) and the generic sentence still run.
 
 ## Spec-gap resolutions (from docs/research/spec-gaps.md; binding for Phase 2)
 
@@ -103,6 +104,6 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 | impl-engine | 2 | general-purpose (inherit) | worktree-agent-a62fcdf3378209847 @ fb7521e | merged |
 | impl-import | 2 | general-purpose (inherit) | worktree-agent-a797c52c6ecf65e5e @ 63f7665 | merged |
 | impl-analysis | 2 | general-purpose (inherit) | worktree-agent-a2500c47c9eafbd4d @ 6fdd440 | merged (before impl-import: disjoint paths, merged as it arrived) |
-| impl-explain | 2 | general-purpose (inherit) | worktree | running |
+| impl-explain | 2 | general-purpose (inherit) | worktree-agent-a120e6c225c5dd86c @ 49363b6 | merged |
 | impl-ui | 2 | general-purpose (inherit) | worktree | running |
 | impl-deploy | 2 | general-purpose (inherit) | worktree | running |
