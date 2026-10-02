@@ -16,7 +16,10 @@ const cp = (value: number): Score => ({ type: 'cp', value })
 const mate = (value: number): Score => ({ type: 'mate', value })
 
 // Local one-liners (src/engine belongs to another module and is not imported here).
-const toWhite = (raw: Score, stm: Color): Score => ({ type: raw.type, value: stm === 'w' ? raw.value : -raw.value })
+const toWhite = (raw: Score, stm: Color): Score => ({
+  type: raw.type,
+  value: stm === 'w' ? raw.value : -raw.value,
+})
 const stmOf = (fen: string): Color => (fen.split(' ')[1] === 'b' ? 'b' : 'w')
 const otherColor = (c: Color): Color => (c === 'w' ? 'b' : 'w')
 
