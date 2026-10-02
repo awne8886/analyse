@@ -307,6 +307,9 @@ test.describe('mock engine', () => {
     const incorrect = candidates.find((c) => c.loss >= 7)
     expect(correct && ok && incorrect, 'retry candidates in the eval table').toBeTruthy()
 
+    // The board respects prefers-reduced-motion: without the step-back animation of Retry the drag starts on a
+    // settled piece in every browser version.
+    await page.emulateMedia({ reducedMotion: 'reduce' })
     await importGame(page, LIVE)
     await waitForCompleteReview(page)
     await page.getByTestId('start-review').click()

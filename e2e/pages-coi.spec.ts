@@ -14,7 +14,17 @@ test('the Pages build isolates through the coi service worker and keeps the URL'
       '__e2eDocuments',
       String(Number(sessionStorage.getItem('__e2eDocuments') ?? 0) + 1),
     )
+    // Diagnostics for a failure: how each document started (isolated / controlled) and when.
+    const log = JSON.parse(sessionStorage.getItem('__e2eDocLog') ?? '[]') as unknown[]
+    log.push({
+      isolated: window.crossOriginIsolated,
+      controlled: navigator.serviceWorker?.controller != null,
+      t: Math.round(performance.timeOrigin) % 100000,
+    })
+    sessionStorage.setItem('__e2eDocLog', JSON.stringify(log))
   })
+  const consoleLines: string[] = []
+  page.on('console', (m) => consoleLines.push(m.text()))
   await page.goto(URL_UNDER_TEST)
 
   const snapshot = () =>
@@ -53,7 +63,11 @@ test('the Pages build isolates through the coi service worker and keeps the URL'
 
   const state = await snapshot()
   expect(state.documents).toBeGreaterThanOrEqual(1)
-  expect(state.documents).toBeLessThanOrEqual(2)
+  const docLog = await page.evaluate(() => sessionStorage.getItem('__e2eDocLog'))
+  expect(
+    state.documents,
+    `documents: ${docLog}\nconsole: ${JSON.stringify(consoleLines)}`,
+  ).toBeLessThanOrEqual(2)
   expect(state.isolated).toBe(true)
   expect(state.scope).toMatch(/\/analyse\/$/)
   expect(state.controlled).toBe(true)
