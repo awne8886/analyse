@@ -5,7 +5,20 @@ import type { Score } from '../types/engine'
 import type { GameMove, ImportedGame } from '../types/game'
 import { CLASSIFICATIONS, type Classification, type GameReview, type PlyReview } from '../types/review'
 
-export const FIXTURE_SANS = ['e4', 'e5', 'Nf3', 'Nc6', 'Bc4', 'Nf6', 'Ng5', 'd5', 'exd5', 'Nxd5', 'Nxf7', 'Kxf7']
+export const FIXTURE_SANS = [
+  'e4',
+  'e5',
+  'Nf3',
+  'Nc6',
+  'Bc4',
+  'Nf6',
+  'Ng5',
+  'd5',
+  'exd5',
+  'Nxd5',
+  'Nxf7',
+  'Kxf7',
+]
 /** ply k (1-based) has FIXTURE_CLASSES[k - 1]: every classification appears at least once */
 export const FIXTURE_CLASSES: Classification[] = [
   'book',
@@ -97,7 +110,9 @@ export function fixtureReview(game: ImportedGame = fixtureGame(), pendingFrom?: 
       bestUci: m.ply === 8 ? 'd7d6' : m.uci,
       bestSan: m.ply === 8 ? 'd6' : m.san,
       bestPv: m.ply === 8 ? ['d7d6'] : [m.uci],
-      playedLine: next ? { multipv: 2, depth: 16, score: FIXTURE_EVALS[i + 1], pv: [m.uci, next.uci] } : undefined,
+      playedLine: next
+        ? { multipv: 2, depth: 16, score: FIXTURE_EVALS[i + 1], pv: [m.uci, next.uci] }
+        : undefined,
       classification,
       reasonCode: 'fixture',
       accuracy: 90,
@@ -116,11 +131,18 @@ export function fixtureReview(game: ImportedGame = fixtureGame(), pendingFrom?: 
     }
   })
   const tally = { white: zeroTally(), black: zeroTally() }
-  for (const p of plies) if (p.status === 'done') tally[p.color === 'w' ? 'white' : 'black'][p.classification] += 1
+  for (const p of plies)
+    if (p.status === 'done') tally[p.color === 'w' ? 'white' : 'black'][p.classification] += 1
   return {
     gameId: game.id,
     schema: 1,
-    engine: { name: 'Stockfish 19 Lite WASM', build: 'lite-single', tier: 'standard-16', depth: 16, multiPv: 2 },
+    engine: {
+      name: 'Stockfish 19 Lite WASM',
+      build: 'lite-single',
+      tier: 'standard-16',
+      depth: 16,
+      multiPv: 2,
+    },
     plies,
     complete: pendingFrom === undefined,
     notAnalysed: [],

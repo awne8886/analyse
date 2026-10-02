@@ -61,7 +61,8 @@ export function MoveByMove() {
     const tint = classColour ? withAlpha(classColour, 0.6) : LAST_MOVE
     squareStyles[move.from] = { backgroundColor: tint }
     squareStyles[move.to] = { backgroundColor: tint }
-    if (classColour) arrows.push({ startSquare: move.from, endSquare: move.to, color: withAlpha(classColour, 0.8) })
+    if (classColour)
+      arrows.push({ startSquare: move.from, endSquare: move.to, color: withAlpha(classColour, 0.8) })
   }
   if (showBest && pr?.bestUci) arrows.push(uciArrow(pr.bestUci, ARROW_BEST))
   const replyUci = review?.plies[ply]?.bestUci ?? pr?.playedLine?.pv[1]
@@ -87,8 +88,7 @@ export function MoveByMove() {
   const orientation = flipped ? (baseOrientation === 'white' ? 'black' : 'white') : baseOrientation
   const atEnd = ply === game.moves.length && ply > 0 && review?.complete === true
   const device = getDevice()
-  const retryDisabled =
-    ply === 0 || !done || (device?.multiPv === 1 && phase === 'analysing') || !pr.bestUci
+  const retryDisabled = ply === 0 || !done || (device?.multiPv === 1 && phase === 'analysing') || !pr.bestUci
   const inBook = review?.opening && ply >= 1 && ply <= review.opening.lastBookPly
 
   return (
@@ -120,7 +120,9 @@ export function MoveByMove() {
             pieceSet={settings.pieceSet}
             squareStyles={squareStyles}
             arrows={arrows}
-            badge={c && move && !retry.active && !showBest ? { square: move.to, classification: c } : undefined}
+            badge={
+              c && move && !retry.active && !showBest ? { square: move.to, classification: c } : undefined
+            }
             allowDragging={retry.active && retry.fen === null}
             onStep={(d) => step(d)}
             onDrop={(from, to, piece) => {

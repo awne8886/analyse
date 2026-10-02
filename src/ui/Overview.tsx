@@ -44,7 +44,15 @@ function sideMoves(review: GameReview | undefined, color: 'w' | 'b'): number {
   return review?.plies.filter((p) => p.color === color && p.status === 'done').length ?? 0
 }
 
-function RatingCell({ game, review, side }: { game: ImportedGame; review?: GameReview; side: 'white' | 'black' }) {
+function RatingCell({
+  game,
+  review,
+  side,
+}: {
+  game: ImportedGame
+  review?: GameReview
+  side: 'white' | 'black'
+}) {
   const value = review?.rating[side]
   const enough = sideMoves(review, side === 'white' ? 'w' : 'b') >= REVIEW_CONFIG.ratingMinMoves
   const acpl = game[side].rating === undefined
@@ -85,11 +93,7 @@ export function Overview() {
   }
 
   return (
-    <section
-      className="overview"
-      data-testid="overview"
-      aria-labelledby="overview-title"
-    >
+    <section className="overview" data-testid="overview" aria-labelledby="overview-title">
       <h1 id="overview-title" className="screen-title">
         {t('overview.title')}
       </h1>

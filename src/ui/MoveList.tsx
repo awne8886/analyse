@@ -72,14 +72,25 @@ export function MoveList({
         </span>
         {c ? <ClassificationIcon classification={c} size={16} /> : null}
         {pr?.status === 'not-analysed' ? (
-          <span className="move-na" role="img" title={renderKeyed({ key: 'E-9' })} aria-label={renderKeyed({ key: 'E-9' })} />
+          <span
+            className="move-na"
+            role="img"
+            title={renderKeyed({ key: 'E-9' })}
+            aria-label={renderKeyed({ key: 'E-9' })}
+          />
         ) : null}
       </button>
     )
   }
 
   return (
-    <div className="move-list" data-testid="move-list" ref={listRef} role="list" aria-label={t('movelist.label')}>
+    <div
+      className="move-list"
+      data-testid="move-list"
+      ref={listRef}
+      role="list"
+      aria-label={t('movelist.label')}
+    >
       {rowsOf(game.moves).map((row, i) => (
         <div className={`move-row ${i % 2 ? 'odd' : 'even'}`} key={`${row.num}-${i}`} role="listitem">
           <span className="move-num">{row.num}.</span>

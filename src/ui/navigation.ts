@@ -26,7 +26,11 @@ export const toFirst = () => goToPly(0)
 export const toLast = () => goToPly(useReviewStore.getState().game?.moves.length ?? 0)
 
 /** The next key moment of the user's colour after `ply`, wrapping around (R23 "Key Moves"); null when none. */
-export function nextKeyMoment(review: GameReview | undefined, ply: number, userColor: 'w' | 'b'): number | null {
+export function nextKeyMoment(
+  review: GameReview | undefined,
+  ply: number,
+  userColor: 'w' | 'b',
+): number | null {
   const mine = (review?.keyMoments ?? []).filter((k) => review?.plies[k - 1]?.color === userColor)
   if (!mine.length) return null
   return mine.find((k) => k > ply) ?? mine[0]
@@ -35,7 +39,9 @@ export function nextKeyMoment(review: GameReview | undefined, ply: number, userC
 const TYPING = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
 /** Global review hotkeys (G.23): Left/Right, Home/End, `f` flip, `e` Explain. Returns true when handled. */
-export function handleKey(e: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey' | 'target'>): boolean {
+export function handleKey(
+  e: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey' | 'target'>,
+): boolean {
   if (e.altKey || e.ctrlKey || e.metaKey) return false
   const target = e.target as HTMLElement | null
   if (target && (TYPING.has(target.tagName) || target.isContentEditable)) return false

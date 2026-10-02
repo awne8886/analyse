@@ -67,7 +67,12 @@ export function Calibration() {
         return
       }
       const body = (await res.json()) as {
-        games?: Array<{ url: string; pgn?: string; rules?: string; accuracies?: { white: number; black: number } }>
+        games?: Array<{
+          url: string
+          pgn?: string
+          rules?: string
+          accuracies?: { white: number; black: number }
+        }>
       }
       const games = (body.games ?? []).filter((g) => g.accuracies && g.pgn && g.rules === 'chess')
       setTotal(games.length)
@@ -110,10 +115,18 @@ export function Calibration() {
       {error ? <p role="alert">{error}</p> : null}
       <p role="status">{t('calibration.status', { done: rows.length * 2, total: total * 2 })}</p>
       <p>
-        {t('calibration.mae', { preset: t('calibration.presetShipped'), mae: oneDecimal(shipped.mae), n: shipped.n })}
+        {t('calibration.mae', {
+          preset: t('calibration.presetShipped'),
+          mae: oneDecimal(shipped.mae),
+          n: shipped.n,
+        })}
       </p>
       <p>
-        {t('calibration.mae', { preset: t('calibration.presetLichess'), mae: oneDecimal(lichess.mae), n: lichess.n })}
+        {t('calibration.mae', {
+          preset: t('calibration.presetLichess'),
+          mae: oneDecimal(lichess.mae),
+          n: lichess.n,
+        })}
       </p>
       <table className="calibration-table">
         <tbody>

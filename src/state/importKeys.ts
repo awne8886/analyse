@@ -36,7 +36,8 @@ const KEY_BY_CODE: Record<ImportErrorCode, string> = {
 export function importErrorText(error: ImportError): KeyedText {
   const vars = { ...(error.detail ?? {}) }
   if (error.code === 'pgn_multiple' && vars.n === undefined && error.choices) vars.n = error.choices.length
-  const key = error.code === 'variant_unsupported' && vars.variant !== undefined ? 'I-14' : KEY_BY_CODE[error.code]
+  const key =
+    error.code === 'variant_unsupported' && vars.variant !== undefined ? 'I-14' : KEY_BY_CODE[error.code]
   return { key, vars, fallback: error.message }
 }
 

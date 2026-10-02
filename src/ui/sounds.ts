@@ -2,15 +2,7 @@
 import type { GameMove } from '../types/game'
 
 export type SoundName =
-  | 'move'
-  | 'capture'
-  | 'castle'
-  | 'check'
-  | 'promote'
-  | 'game-end'
-  | 'brilliant'
-  | 'illegal'
-  | 'notify'
+  'move' | 'capture' | 'castle' | 'check' | 'promote' | 'game-end' | 'brilliant' | 'illegal' | 'notify'
 
 /** The sound of stepping onto a move: game end on the last move, then check, promotion, castling, capture. */
 export function soundFor(move: Pick<GameMove, 'san' | 'captured' | 'promotion'>, isLast: boolean): SoundName {

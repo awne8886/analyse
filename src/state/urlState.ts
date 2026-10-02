@@ -41,7 +41,12 @@ export function writeUrlState(state: UrlState, mode: 'replace' | 'push' = 'repla
 }
 
 /** `${origin}${base}?game=<id>&ply=<n>` (R29, G.27). */
-export function buildShareLink(gameId: string, ply: number | undefined, origin: string, base: string): string {
+export function buildShareLink(
+  gameId: string,
+  ply: number | undefined,
+  origin: string,
+  base: string,
+): string {
   return `${origin}${base}${toSearch({ game: gameId, ply })}`
 }
 

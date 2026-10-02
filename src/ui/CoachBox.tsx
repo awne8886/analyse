@@ -102,7 +102,9 @@ export function CoachBox({
           ) : retry.feedback ? (
             <>
               <ClassificationIcon classification={retry.feedback.classification} size={18} />
-              <strong className={`grade-${retry.feedback.grade}`}>{t(`retry.${retry.feedback.grade}`)}</strong>
+              <strong className={`grade-${retry.feedback.grade}`}>
+                {t(`retry.${retry.feedback.grade}`)}
+              </strong>
               <span>{t(retry.feedback.praise)}</span>
             </>
           ) : (
@@ -158,13 +160,10 @@ export function CoachBox({
           {review.keyMoments.map((k) => {
             const kp = review.plies[k - 1]
             return (
-              <button
-                type="button"
-                key={k}
-                className={k === ply ? 'active' : ''}
-                onClick={() => goToPly(k)}
-              >
-                {kp?.status === 'done' ? <ClassificationIcon classification={kp.classification} size={14} /> : null}
+              <button type="button" key={k} className={k === ply ? 'active' : ''} onClick={() => goToPly(k)}>
+                {kp?.status === 'done' ? (
+                  <ClassificationIcon classification={kp.classification} size={14} />
+                ) : null}
                 {game.moves[k - 1] ? moveLabel(game.moves[k - 1]) : k}
               </button>
             )

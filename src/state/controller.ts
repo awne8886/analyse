@@ -6,7 +6,14 @@ import { REVIEW_CONFIG, analyzeGame, classifyPly } from '../analysis'
 import { calibrate, createEnginePool } from '../engine'
 import { buildMoveFacts, explain } from '../explain'
 import { confirmInProgress, importGame, parseInput } from '../import'
-import type { DeviceProfile, EngineApi, EngineProfile, PositionEval, ProfileName, Tier } from '../types/engine'
+import type {
+  DeviceProfile,
+  EngineApi,
+  EngineProfile,
+  PositionEval,
+  ProfileName,
+  Tier,
+} from '../types/engine'
 import type { Explanation } from '../types/explain'
 import type { GameMove, ImportedGame, ImportResult, ParsedInput } from '../types/game'
 import type { Classification, GameReview } from '../types/review'
@@ -98,7 +105,8 @@ export function bootApp(device: DeviceProfile | null): void {
   session.device = device
   installEngineStats()
   if (!hasStoredSettings()) settings().update({ profile: defaultProfileFor(device) })
-  const applyTheme = (theme: 'dark' | 'light') => document.documentElement.classList.toggle('dark', theme === 'dark')
+  const applyTheme = (theme: 'dark' | 'light') =>
+    document.documentElement.classList.toggle('dark', theme === 'dark')
   applyTheme(settings().theme)
   useSettingsStore.subscribe((s, prev) => {
     if (s.theme !== prev.theme) applyTheme(s.theme)
@@ -216,7 +224,9 @@ async function doImport(parsed: ParsedInput, text: string | null): Promise<void>
   } catch (e) {
     const err = e as { code?: string; message?: string; detail?: Record<string, string | number> }
     if (err.code) {
-      return failImport(importErrorText({ code: err.code as never, message: err.message ?? '', detail: err.detail }))
+      return failImport(
+        importErrorText({ code: err.code as never, message: err.message ?? '', detail: err.detail }),
+      )
     }
     return failImport({ key: 'error.unexpected', vars: { message: err.message ?? String(e) } })
   }
@@ -384,10 +394,17 @@ export function explanationFor(
   voice: 'me' | 'neutral' = settings().voice,
 ): Explanation {
   const isUserMove = review.plies[ply - 1]?.color === userColor
-  return explain(buildMoveFacts(review, ply, userColor), voice === 'me' && isUserMove ? 'personal' : 'impersonal')
+  return explain(
+    buildMoveFacts(review, ply, userColor),
+    voice === 'me' && isUserMove ? 'personal' : 'impersonal',
+  )
 }
 
-async function runAnalysis(game: ImportedGame, resumeFrom: GameReview | undefined, fast: boolean): Promise<void> {
+async function runAnalysis(
+  game: ImportedGame,
+  resumeFrom: GameReview | undefined,
+  fast: boolean,
+): Promise<void> {
   cancelAnalysis()
   const ctrl = new AbortController()
   session.analysis = ctrl
@@ -524,10 +541,20 @@ export function tryRetryMove(from: string, to: string, promotion = 'q'): boolean
   return true
 }
 
-async function gradeRetry(move: GameMove, game: ImportedGame, review: GameReview, ply: number): Promise<void> {
+async function gradeRetry(
+  move: GameMove,
+  game: ImportedGame,
+  review: GameReview,
+  ply: number,
+): Promise<void> {
   const pr = review.plies[ply - 1]
   const lines = [
-    { multipv: 1, depth: pr.depth, score: pr.evalBefore, pv: pr.bestPv.length ? pr.bestPv : [pr.bestUci ?? ''] },
+    {
+      multipv: 1,
+      depth: pr.depth,
+      score: pr.evalBefore,
+      pv: pr.bestPv.length ? pr.bestPv : [pr.bestUci ?? ''],
+    },
     ...(pr.secondLine ? [{ ...pr.secondLine, multipv: 2 }] : []),
   ]
   const before: PositionEval = {
@@ -546,7 +573,8 @@ async function gradeRetry(move: GameMove, game: ImportedGame, review: GameReview
       depth: 0,
       multiPv: 1,
       bestmove: null,
-      terminal: move.terminal === 'checkmate' ? 'checkmate' : move.terminal === 'stalemate' ? 'stalemate' : 'draw',
+      terminal:
+        move.terminal === 'checkmate' ? 'checkmate' : move.terminal === 'stalemate' ? 'stalemate' : 'draw',
     }
   } else if (sameLine) {
     // the line's score is already the White-perspective value of the position after its first move

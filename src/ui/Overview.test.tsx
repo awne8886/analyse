@@ -83,7 +83,9 @@ describe('Overview (G.2)', () => {
     render(<Overview />)
     const wo = screen.getByTestId('phase-grade-white-opening')
     expect(wo.querySelector('svg')?.getAttribute('data-classification')).toBe('best')
-    expect(wo.getAttribute('title')).toBe('White in the opening: accuracy 91.2, shown as a move-quality icon.')
+    expect(wo.getAttribute('title')).toBe(
+      'White in the opening: accuracy 91.2, shown as a move-quality icon.',
+    )
     expect(screen.getByTestId('phase-grade-white-middlegame').querySelector('svg')).toHaveAttribute(
       'data-classification',
       'inaccuracy',

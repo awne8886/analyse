@@ -136,7 +136,8 @@ export const UI_STRINGS: Record<string, string> = {
   // Import screen
   'import.title': 'Game Review',
   'import.inputLabel': 'Game link or PGN',
-  'import.placeholder': 'Paste a Chess.com or Lichess game link, or a full PGN (you can also drop a .pgn file here)',
+  'import.placeholder':
+    'Paste a Chess.com or Lichess game link, or a full PGN (you can also drop a .pgn file here)',
   'import.submit': 'Analyse',
   'import.youPlayed': 'You played',
   'import.white': 'White',

@@ -23,7 +23,10 @@ export function ProfileSelect({ testId }: { testId: string }) {
       t1: sec(tiers['fast-14'].movetimeMs),
       t2: sec(tiers['auto-18'].movetimeMs),
     }),
-    standard: t('profile.standard', { depth: profiles.standard.depth, time: sec(profiles.standard.movetimeMs) }),
+    standard: t('profile.standard', {
+      depth: profiles.standard.depth,
+      time: sec(profiles.standard.movetimeMs),
+    }),
     deep: t('profile.deep', { depth: profiles.deep.depth, time: sec(profiles.deep.movetimeMs) }),
   }
   return (

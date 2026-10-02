@@ -30,7 +30,8 @@ export function whiteBarPercent(score: Score, mover?: 'w' | 'b'): number {
   return 50 + (50 * evalToPawns(score, mover)) / EVAL_CLAMP_PAWNS
 }
 
-const hasEval = (p: PlyReview | undefined) => p !== undefined && (p.status === 'done' || p.status === 'refining')
+const hasEval = (p: PlyReview | undefined) =>
+  p !== undefined && (p.status === 'done' || p.status === 'refining')
 
 /** The White-perspective evaluation of position n (0 = start, k = after ply k), when analysed. */
 export function positionScore(review: GameReview | undefined, n: number): Score | undefined {
@@ -98,8 +99,7 @@ export function graphPoints(review: GameReview | undefined): GraphPoint[] {
     while (r < raw.length && raw[r] === null) r++
     const lv = l >= 0 ? (raw[l] as number) : null
     const rv = r < raw.length ? (raw[r] as number) : null
-    const pawns =
-      lv !== null && rv !== null ? lv + ((rv - lv) * (x - l)) / (r - l) : (lv ?? rv ?? 0)
+    const pawns = lv !== null && rv !== null ? lv + ((rv - lv) * (x - l)) / (r - l) : (lv ?? rv ?? 0)
     return { x, pawns, hollow: true }
   })
 }

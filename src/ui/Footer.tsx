@@ -36,7 +36,11 @@ export function AboutPanel({ onClose }: { onClose: () => void }) {
           </a>
         </li>
         <li>
-          <a href={`${import.meta.env.BASE_URL}engine/sf19/Copying.txt`} target="_blank" rel="noopener noreferrer">
+          <a
+            href={`${import.meta.env.BASE_URL}engine/sf19/Copying.txt`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             {t('about.linkCopying')}
           </a>
         </li>
@@ -56,7 +60,9 @@ export function AboutPanel({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={() =>
-            void import('../../THIRD_PARTY_LICENSES.md?raw').then((m: { default: string }) => setLicenses(m.default))
+            void import('../../THIRD_PARTY_LICENSES.md?raw').then((m: { default: string }) =>
+              setLicenses(m.default),
+            )
           }
         >
           {t('about.licenses')}

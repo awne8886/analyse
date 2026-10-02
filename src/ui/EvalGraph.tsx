@@ -49,7 +49,11 @@ export function EvalGraph({
   const phaseLines = [
     { start: review?.phaseStarts.middlegame, colour: PHASE_MIDDLEGAME, name: t('phase.middlegame') },
     { start: review?.phaseStarts.endgame, colour: PHASE_ENDGAME, name: t('phase.endgame') },
-  ].filter((p) => p.start !== undefined && p.start > 0) as Array<{ start: number; colour: string; name: string }>
+  ].filter((p) => p.start !== undefined && p.start > 0) as Array<{
+    start: number
+    colour: string
+    name: string
+  }>
   const hovered = hover !== null ? review?.plies[hover - 1] : undefined
   const hoverScore = hover !== null ? positionScore(review, hover) : undefined
 
@@ -72,7 +76,14 @@ export function EvalGraph({
       >
         <rect x="0" y="0" width={W} height={H} className="eval-graph-bg" />
         {area ? <polygon points={area} className="eval-graph-area" /> : null}
-        <line x1="0" x2={W} y1={H / 2} y2={H / 2} className="eval-graph-zero" vectorEffect="non-scaling-stroke" />
+        <line
+          x1="0"
+          x2={W}
+          y1={H / 2}
+          y2={H / 2}
+          className="eval-graph-zero"
+          vectorEffect="non-scaling-stroke"
+        />
         {phaseLines.map((p) => (
           <line
             key={p.name}

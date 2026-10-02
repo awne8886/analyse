@@ -14,10 +14,9 @@ export function useExplanation(review: GameReview | undefined, ply: number): Exp
     const pr = review?.plies[ply - 1]
     if (!review || !pr || pr.status !== 'done') return pr?.explanation ?? EMPTY
     try {
-      return explanationFor(review, ply, userColor, voice)
+      return explanationFor(review, ply, userColor, voice) ?? pr.explanation
     } catch {
       return pr.explanation
     }
   }, [review, ply, userColor, voice])
 }
-
