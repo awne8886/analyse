@@ -76,6 +76,10 @@ class Pool implements EnginePool {
   private fifo: Request[] = []
   private booting: Promise<void> | null = null
   private disposed = false
+  /** Set when no worker is left (boot or respawn failed): every request rejects with it until the next init. */
+  private failed: Error | null = null
+  /** Counts `init` calls; a worker whose last newGame predates the current game runs it before its next search. */
+  private game = 0
   private currentJobId = Number.NEGATIVE_INFINITY
   private rr = 0
   private completed = 0
@@ -92,15 +96,17 @@ class Pool implements EnginePool {
     return { ...this.counters }
   }
 
-  /** Boots the workers (nothing exists before the first call). A later call with the same build and worker count
-   *  keeps the workers and re-sends the per-game options before their next search. */
+  /** Boots the workers (nothing exists before the first call). Called once per game: a later call with the same
+   *  build and worker count keeps the workers (also one being respawned) and schedules the per-game options
+   *  (Threads, Hash, MultiPV, ucinewgame, isready) on each of them before its next search, never during one.
+   *  After a fatal failure (no worker left) it boots afresh. */
   async init(profile: EngineProfile): Promise<void> {
     if (this.disposed) throw new Error('engine pool disposed')
     if (this.booting) await this.booting.catch(() => undefined)
     const prev = this.profile
     this.profile = profile
-    const live = this.slots.filter((s) => s.engine)
-    if (live.length && prev.build === profile.build && prev.workers === profile.workers) {
+    this.game++
+    if (this.slots.length && prev.build === profile.build && prev.workers === profile.workers) {
       for (const s of this.slots) s.newGamePending = true
       this.pump()
       return
@@ -110,6 +116,7 @@ class Pool implements EnginePool {
       for (const s of this.slots) s.engine?.terminate()
       this.slots = []
     }
+    this.failed = null
     this.booting = this.boot(profile)
     try {
       await this.booting
@@ -118,7 +125,9 @@ class Pool implements EnginePool {
     }
   }
 
-  private spawn(profile: EngineProfile, withProgress: boolean): Promise<Engine> {
+  /** Boots one worker and runs the per-game sequence with the profile current after `uciok`; returns the game
+   *  that sequence belongs to. */
+  private async spawn(withProgress: boolean): Promise<{ engine: Engine; game: number }> {
     // No download-progress port on WebKit: with it the loader streams the .wasm through a synthetic Response, and
     // WebKit stalled after 100% in CI (the engine never became ready; PLAN.md Assumption 27). The percent is optional
     // (C.1 item 9); WebKit shows "Engine: loading" until the badge.
@@ -126,27 +135,26 @@ class Pool implements EnginePool {
       withProgress && this.hasStatusListener && !isWebKitBrowser()
         ? (percent: number) => this.onStatus({ phase: 'loading', percent })
         : undefined
-    return Engine.create(Engine.variantOrder(profile.build), {
+    const engine = await Engine.create(Engine.variantOrder(this.profile.build), {
       counters: this.counters,
       onDownloadProgress,
-    }).then(async (engine) => {
-      try {
-        await engine.newGame({ threads: profile.threads, hash: profile.hashMb, multipv: profile.multiPv })
-        return engine
-      } catch (e) {
-        engine.terminate()
-        throw e
-      }
     })
+    const game = this.game
+    const p = this.profile
+    try {
+      await engine.newGame({ threads: p.threads, hash: p.hashMb, multipv: p.multiPv })
+      return { engine, game }
+    } catch (e) {
+      engine.terminate()
+      throw e
+    }
   }
 
   private async boot(profile: EngineProfile): Promise<void> {
     this.onStatus({ phase: 'loading', percent: null })
     const n = Math.max(1, profile.workers)
-    const results = await Promise.allSettled(
-      Array.from({ length: n }, (_, i) => this.spawn(profile, i === 0)),
-    )
-    const engines = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value] : []))
+    const results = await Promise.allSettled(Array.from({ length: n }, (_, i) => this.spawn(i === 0)))
+    const engines = results.flatMap((r) => (r.status === 'fulfilled' ? [r.value.engine] : []))
     if (this.disposed) {
       for (const e of engines) e.terminate()
       throw new Error('engine pool disposed')
@@ -154,9 +162,7 @@ class Pool implements EnginePool {
     if (!engines.length) {
       const failure = results.find((r) => r.status === 'rejected')
       const reason: unknown = failure?.status === 'rejected' ? failure.reason : undefined
-      const message = reason instanceof Error ? reason.message : String(reason)
-      this.onStatus({ phase: 'error', key: 'E-2', message })
-      throw new Error(message)
+      throw this.failAll(reason)
     }
     this.slots = engines.map((engine) => ({
       engine,
@@ -176,6 +182,7 @@ class Pool implements EnginePool {
 
   evaluate(fen: string, limits: SearchLimits, jobId: number): Promise<PositionEval> {
     if (this.disposed) return Promise.reject(new Error('engine pool disposed'))
+    if (this.failed) return Promise.reject(this.failed)
     if (jobId < this.currentJobId) return Promise.reject(cancelledError(`engine: stale job ${jobId}`))
     if (jobId > this.currentJobId) {
       this.currentJobId = jobId
@@ -207,6 +214,7 @@ class Pool implements EnginePool {
   /** Calibration search on the first free worker (C.4, PLAN Assumption 15). */
   measureNps(): Promise<number> {
     if (this.disposed) return Promise.reject(new Error('engine pool disposed'))
+    if (this.failed) return Promise.reject(this.failed)
     return new Promise<number>((resolve, reject) => {
       this.priority.unshift({
         kind: 'nps',
@@ -311,8 +319,13 @@ class Pool implements EnginePool {
     }
   }
 
-  /** One search under the watchdog: no `info` or `bestmove` line for watchdogMs terminates the worker. */
-  private async attempt(slot: Slot, req: Request, limits: SearchLimits): Promise<AnalysisResult | number> {
+  /** One search under the watchdog: no `info` or `bestmove` line for watchdogMs terminates the worker. Null when
+   *  the request was cancelled while the worker ran the per-game sequence (no search is started then). */
+  private async attempt(
+    slot: Slot,
+    req: Request,
+    limits: SearchLimits,
+  ): Promise<AnalysisResult | number | null> {
     const engine = slot.engine
     if (!engine) throw new Error('engine: no worker')
     const watchdogMs = REVIEW_CONFIG.engineTimeouts.watchdogMs
@@ -333,6 +346,7 @@ class Pool implements EnginePool {
         slot.newGamePending = false
         const p = this.profile
         await engine.newGame({ threads: p.threads, hash: p.hashMb, multipv: p.multiPv })
+        if (req.cancelled) return null
       }
       if (req.kind === 'nps') return await engine.measureNps(limits.depth)
       return await engine.analyse(req.fen, {
@@ -351,7 +365,7 @@ class Pool implements EnginePool {
     const limits =
       req.attempts === 0 ? req.limits : { ...req.limits, depth: REVIEW_CONFIG.engineTimeouts.retryDepth }
     const started = Date.now()
-    let result: AnalysisResult | number
+    let result: AnalysisResult | number | null
     try {
       result = await this.attempt(slot, req, limits)
     } catch (err) {
@@ -384,7 +398,7 @@ class Pool implements EnginePool {
       this.priority.unshift(req) // retry next, ahead of everything else
       return
     }
-    if (req.cancelled) return // stale result of a stopped search: dropped
+    if (req.cancelled || result === null) return // stale result of a stopped search: dropped
     if (typeof result === 'number') {
       req.resolve(result)
       return
@@ -408,27 +422,43 @@ class Pool implements EnginePool {
     req.resolve(evaluation)
   }
 
-  /** Replaces a failed worker. When no worker is left, every queued request fails with the E-2 status and the
-   *  error is returned for the request in hand. */
+  /** Replaces a failed worker. When no worker is left, the pool fails (`failAll`) and the error is returned for
+   *  the request in hand. */
   private async respawn(slot: Slot): Promise<Error | null> {
     slot.engine?.terminate()
     slot.engine = null
     try {
-      const engine = await this.spawn(this.profile, false)
-      if (this.disposed) engine.terminate()
-      else slot.engine = engine
+      const { engine, game } = await this.spawn(false)
+      if (this.disposed || !this.slots.includes(slot)) {
+        engine.terminate() // the pool was disposed or rebooted meanwhile: never leak a worker
+        return null
+      }
+      slot.engine = engine
+      // the spawn ran the per-game sequence; run it again only if a new game started after it
+      slot.newGamePending = game !== this.game
       return null
     } catch (err) {
       if (this.disposed) return null
       this.slots = this.slots.filter((s) => s !== slot)
       if (this.slots.some((s) => s.engine || s.busy)) return null
-      const fatal = new Error(err instanceof Error ? err.message : String(err))
-      this.onStatus({ phase: 'error', key: 'E-2', message: fatal.message })
-      for (const r of [...this.priority, ...this.fifo]) r.reject(fatal)
-      this.priority = []
-      this.fifo = []
-      return fatal
+      return this.failAll(err)
     }
+  }
+
+  /** No worker is left: report E-2, reject every queued request and every later one (until the next init) with a
+   *  plain (non-Abort) error, so no caller waits for a worker that will never come. */
+  private failAll(reason: unknown): Error {
+    const fatal = new Error(reason instanceof Error ? reason.message : String(reason))
+    this.failed = fatal
+    this.onStatus({ phase: 'error', key: 'E-2', message: fatal.message })
+    const pending = [...this.priority, ...this.fifo]
+    this.priority = []
+    this.fifo = []
+    for (const r of pending) {
+      r.cancelled = true
+      r.reject(fatal)
+    }
+    return fatal
   }
 }
 

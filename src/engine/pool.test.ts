@@ -11,6 +11,7 @@ class MockWorker {
   static boot: (url: string) => 'ok' | 'error' | 'silent' = () => 'ok'
   static script: (w: MockWorker, go: string) => Reply = (w, go) => defaultLines(w, go)
   static replyToStop = true
+  static holdReadyok = false // the test answers `isready` itself (a worker inside newGame)
   readonly url: string
   readonly options: unknown
   onmessage: ((e: { data: unknown }) => void) | null = null
@@ -45,8 +46,11 @@ class MockWorker {
       if (b === 'ok') this.emit(['Stockfish 19 Lite WASM by the Stockfish developers', 'uciok'])
       if (b === 'error')
         queueMicrotask(() => this.onerror?.({ message: 'RuntimeError: unreachable', preventDefault() {} }))
-    } else if (msg === 'isready') this.emit(['readyok'])
-    else if (msg.startsWith('setoption name MultiPV value ')) {
+    } else if (msg === 'isready') {
+      if (!MockWorker.holdReadyok) this.emit(['readyok'])
+    } else if (/^(ucinewgame|setoption name (Hash|Threads) )/.test(msg)) {
+      if (this.searching) this.violations.push(`${msg} during search`)
+    } else if (msg.startsWith('setoption name MultiPV value ')) {
       if (this.searching) this.violations.push(`${msg} during search`)
       this.multiPv = Number(msg.split(' ').pop())
     } else if (msg.startsWith('position ')) {
@@ -77,6 +81,9 @@ class MockWorker {
     this.terminated = true
   }
 
+  newGames(): number {
+    return this.sent.filter((m) => m === 'ucinewgame').length
+  }
   gos(): string[] {
     return this.sent.filter((m) => m.startsWith('go '))
   }
@@ -153,6 +160,7 @@ beforeEach(() => {
   MockWorker.boot = () => 'ok'
   MockWorker.script = (w, go) => defaultLines(w, go)
   MockWorker.replyToStop = true
+  MockWorker.holdReadyok = false
   vi.stubGlobal('Worker', MockWorker)
   localStorage.clear()
 })
@@ -668,6 +676,214 @@ describe('results are plain data', () => {
     const r: PositionEval = await pool.evaluate(FENS[1], STD, 1)
     expect(Object.keys(r).sort()).toEqual(['bestmove', 'depth', 'fen', 'lines', 'multiPv'])
     expect(Object.keys(r.lines[0]).sort()).toEqual(['depth', 'multipv', 'pv', 'score'])
+    pool.dispose()
+  })
+})
+
+const WORKER_ERROR = 'single: worker error RuntimeError: unreachable'
+const INFO_16 = 'info depth 16 multipv 1 score cp 3 nodes 1 nps 1 time 1 pv e2e4'
+
+describe('no worker left (review performance H2): requests fail with E-2 at once, nothing hangs', () => {
+  it('a failed respawn after the watchdog rejects the request in hand, the queue and every later request', async () => {
+    vi.useFakeTimers()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const statuses: EngineStatus[] = []
+    const pool = createEnginePool(ONE, { onStatus: (s) => statuses.push(s) })
+    await pool.init(ONE)
+    MockWorker.boot = () => 'error'
+    MockWorker.script = () => 'silent'
+    const inHand = settle(pool.evaluate(FENS[0], STD, 10))
+    const queued = settle(pool.evaluate(FENS[1], STD, 10))
+    await vi.advanceTimersByTimeAsync(11_000)
+    expect(MockWorker.all).toHaveLength(2) // one respawn attempt, which failed
+    for (const r of [inHand, queued]) {
+      expect(r.error?.message).toBe(WORKER_ERROR)
+      expect(r.error?.name).not.toBe('AbortError')
+    }
+    expect(statuses.at(-1)).toEqual({ phase: 'error', key: 'E-2', message: WORKER_ERROR })
+    MockWorker.boot = () => 'ok'
+    MockWorker.script = (w, go) => defaultLines(w, go)
+    const later = settle(pool.evaluate(FENS[2], STD, 11))
+    const nps = settle(pool.measureNps())
+    await vi.advanceTimersByTimeAsync(0)
+    expect(later.error?.message).toBe(WORKER_ERROR)
+    expect(later.error?.name).not.toBe('AbortError')
+    expect(nps.error?.message).toBe(WORKER_ERROR)
+    expect(MockWorker.all).toHaveLength(2) // no request creates a worker behind the caller's back
+    // the E-2 Retry: a new init boots a fresh worker and the pool serves requests again
+    await pool.init(ONE)
+    expect(MockWorker.all).toHaveLength(3)
+    expect(statuses.at(-1)).toEqual({ phase: 'ready', build: 'lite-single', threads: 1 })
+    const again = settle(pool.evaluate(FENS[2], STD, 12))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(again.value?.depth).toBe(16)
+    pool.dispose()
+    expect(MockWorker.all.every((w) => w.terminated)).toBe(true)
+    await expect(pool.evaluate(FENS[3], STD, 13)).rejects.toThrow('engine pool disposed')
+    warn.mockRestore()
+  })
+
+  it('a failed boot rejects a request queued before init and every later request with the boot error', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    MockWorker.boot = () => 'error'
+    const pool = createEnginePool(ONE)
+    const early = settle(pool.evaluate(FENS[0], STD, 1))
+    await expect(pool.init(ONE)).rejects.toThrow(WORKER_ERROR)
+    const later = settle(pool.evaluate(FENS[1], STD, 2))
+    await flush()
+    for (const r of [early, later]) {
+      expect(r.error?.message).toBe(WORKER_ERROR)
+      expect(r.error?.name).not.toBe('AbortError')
+    }
+    pool.dispose()
+    warn.mockRestore()
+  })
+
+  it('with two workers, one failed respawn keeps the pass going on the survivor (no E-2)', async () => {
+    vi.useFakeTimers()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    MockWorker.script = (w, go) =>
+      w.position.includes(ISSUE_124) && go.includes('depth 16') ? 'silent' : defaultLines(w, go)
+    const statuses: EngineStatus[] = []
+    const pool = createEnginePool(DESKTOP, { onStatus: (s) => statuses.push(s) })
+    await pool.init(DESKTOP)
+    MockWorker.boot = () => 'error'
+    const stuck = settle(pool.evaluate(ISSUE_124, STD, 1))
+    const rest = FENS.slice(0, 4).map((f) => settle(pool.evaluate(f, STD, 1)))
+    await vi.advanceTimersByTimeAsync(11_000)
+    expect(rest.every((r) => r.value?.depth === 16)).toBe(true)
+    expect(stuck.value).toMatchObject({ depth: 12, bestmove: 'e2e4' }) // retried on the survivor
+    expect(statuses.some((s) => s.phase === 'error')).toBe(false)
+    expect(pool.progress?.().workers).toBe(1)
+    pool.dispose()
+    warn.mockRestore()
+  })
+})
+
+describe('per-game options once per game (review performance M2, R17, C.1 item 5)', () => {
+  const GAME2: EngineProfile = {
+    ...DESKTOP,
+    hashMb: 32,
+    limits: { depth: 18, movetimeMs: 600, multiPv: 2 },
+    tier: 'auto-18',
+  }
+
+  it('a later init schedules Hash, MultiPV, ucinewgame, isready once on each worker before its next position, never mid-search', async () => {
+    MockWorker.script = (w, go) => (w.position.includes(FENS[0]) ? 'manual' : defaultLines(w, go))
+    const pool = createEnginePool(DESKTOP)
+    await pool.init(DESKTOP)
+    const a = settle(pool.evaluate(FENS[0], STD, 1))
+    await flush()
+    const busy = MockWorker.all.find((w) => w.searching)
+    expect(busy).toBeDefined()
+    await pool.init(GAME2) // the next game starts while the previous search still runs
+    await pool.init(GAME2) // a repeated init before any search is still one new game
+    expect(MockWorker.all).toHaveLength(2) // no reboot
+    expect(MockWorker.all.map((w) => w.newGames())).toEqual([1, 1]) // nothing sent during the search
+    busy?.emit([INFO_16, 'bestmove e2e4'])
+    await flush()
+    expect(a.value?.depth).toBe(16)
+    await Promise.all(FENS.slice(1).map((f) => pool.evaluate(f, GAME2.limits, 2)))
+    for (const w of MockWorker.all) {
+      expect(w.violations).toEqual([])
+      expect(w.newGames()).toBe(2)
+      const i = w.sent.lastIndexOf('ucinewgame')
+      expect(w.sent.slice(i - 2, i + 3)).toEqual([
+        'setoption name Hash value 32',
+        'setoption name MultiPV value 2',
+        'ucinewgame',
+        'isready',
+        expect.stringMatching(/^position fen /),
+      ])
+      expect(w.sent.indexOf(`position fen ${FENS[0]}`)).toBeLessThan(i) // the old game's search came first
+    }
+    pool.dispose()
+  })
+
+  it('an init while the only worker is being respawned keeps that worker (no reboot, no leak, no cancel)', async () => {
+    vi.useFakeTimers()
+    MockWorker.script = (w, go) =>
+      w.position.includes(ISSUE_124) && go.includes('depth 16') ? 'silent' : defaultLines(w, go)
+    const pool = createEnginePool(ONE)
+    await pool.init(ONE)
+    const stuck = settle(pool.evaluate(ISSUE_124, STD, 1))
+    MockWorker.boot = () => 'silent' // the replacement is slow to answer `uci`
+    await vi.advanceTimersByTimeAsync(10_000)
+    expect(MockWorker.all).toHaveLength(2)
+    const w1 = MockWorker.all[1]
+    const init = settle(pool.init({ ...GAME2, workers: 1 }))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(init.done).toBe(true)
+    w1.emit(['uciok'])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(MockWorker.all).toHaveLength(2)
+    expect(w1.terminated).toBe(false)
+    expect(stuck.value).toMatchObject({ depth: 12, bestmove: 'e2e4' })
+    expect(w1.sent).toEqual([
+      'uci',
+      'setoption name Hash value 32',
+      'setoption name MultiPV value 2',
+      'ucinewgame',
+      'isready',
+      `position fen ${ISSUE_124}`,
+      'go depth 12 movetime 1500',
+    ])
+    pool.dispose()
+  })
+})
+
+describe('cancel while a worker is inside newGame (review correctness L4)', () => {
+  it('stop() during the per-game isready: no search is started, stop returns on readyok', async () => {
+    MockWorker.script = () => 'manual'
+    const pool = createEnginePool(ONE)
+    await pool.init(ONE)
+    await pool.init(ONE) // new game: the sequence runs before the next position
+    const w = MockWorker.all[0]
+    MockWorker.holdReadyok = true
+    const r = settle(pool.evaluate(FENS[0], STD, 1))
+    await flush()
+    expect(w.sent.slice(-2)).toEqual(['ucinewgame', 'isready'])
+    const stopped = settle(pool.stop())
+    await flush()
+    expect(r.error?.name).toBe('AbortError')
+    expect(stopped.done).toBe(false) // the isready in flight is awaited (strict serialisation)
+    w.emit(['readyok'])
+    await flush()
+    expect(stopped.done).toBe(true)
+    expect(w.positions()).toEqual([])
+    expect(w.gos()).toEqual([])
+    expect(w.sent).not.toContain('stop')
+    MockWorker.holdReadyok = false
+    const next = settle(pool.evaluate(FENS[1], STD, 2))
+    await flush()
+    expect(w.positions()).toEqual([`position fen ${FENS[1]}`])
+    w.emit([INFO_16, 'bestmove e2e4'])
+    await flush()
+    expect(next.value?.depth).toBe(16)
+    expect(MockWorker.all).toHaveLength(1)
+    expect(w.violations).toEqual([])
+    pool.dispose()
+  })
+
+  it('a newer job id during newGame: the superseded position is never searched, the new one is next', async () => {
+    MockWorker.script = () => 'manual'
+    const pool = createEnginePool(ONE)
+    await pool.init(ONE)
+    await pool.init(ONE)
+    const w = MockWorker.all[0]
+    MockWorker.holdReadyok = true
+    const old = settle(pool.evaluate(FENS[0], STD, 1))
+    await flush()
+    const fresh = settle(pool.evaluate(FENS[1], STD, 2))
+    await flush()
+    expect(old.error?.name).toBe('AbortError')
+    w.emit(['readyok'])
+    await flush()
+    expect(w.positions()).toEqual([`position fen ${FENS[1]}`])
+    w.emit([INFO_16, 'bestmove e2e4'])
+    await flush()
+    expect(fresh.value?.depth).toBe(16)
+    expect(w.violations).toEqual([])
     pool.dispose()
   })
 })
