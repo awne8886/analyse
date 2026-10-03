@@ -80,7 +80,9 @@ function expectWellFormed(game: ImportedGame, r: GameReview): void {
   }
 }
 
-describe('integration: recorded games through the mock engine', () => {
+// Each test replays a whole recorded game through import, analysis and explanations (about 2.5 s locally, more under
+// coverage on CI runners), so they get an explicit budget instead of vitest's 5 s default.
+describe('integration: recorded games through the mock engine', { timeout: 30_000 }, () => {
   beforeEach(routeFetch)
   afterEach(() => {
     vi.unstubAllGlobals()

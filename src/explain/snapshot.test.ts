@@ -29,7 +29,7 @@ const GAMES = [
   ['https://lichess.org/4S1PZUvW', 'li:4S1PZUvW'],
 ] as const
 
-describe('explain() snapshot over the three fixture games', () => {
+describe('explain() snapshot over the three fixture games', { timeout: 30_000 }, () => {
   afterEach(() => {
     vi.unstubAllGlobals()
     delete mockWindow.__USE_MOCK_ENGINE__
