@@ -4,6 +4,11 @@ import './index.css'
 import { ENGINE_STRINGS, deviceProfile } from './engine'
 import { renderApp, renderSplash } from './ui/renderApp'
 
+// performance L2 (D.8, risk 12): the guard below only stops a second wait within one isolation attempt. Once a
+// document of this tab was isolated, a later hard reload (which bypasses the service worker and reloads again)
+// must show the splash too, instead of an import screen that is live for 2 s and then reloaded.
+if (window.crossOriginIsolated) sessionStorage.removeItem('coiReloading')
+
 const onPages = import.meta.env.VITE_DEPLOY_TARGET === 'pages'
 const swPossible = 'serviceWorker' in navigator && window.isSecureContext
 const awaitingIsolation =

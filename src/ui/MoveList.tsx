@@ -65,7 +65,7 @@ export function MoveList({
       >
         <span
           className="move-san"
-          style={coloredMoves && c ? { color: `var(--color-classification-${c})` } : undefined}
+          style={coloredMoves && c ? { color: `var(--color-classification-text-${c})` } : undefined}
         >
           {m.color === 'w' ? <span className="strip-num">{`${moveNumber(m)}.`}</span> : null}
           {m.san}

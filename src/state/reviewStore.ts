@@ -131,5 +131,13 @@ export const useReviewStore = create<ReviewState>()((set, get) => ({
       ply: Math.max(0, Math.min(game.moves.length, ply)),
       notice: game.customStart ? 'custom_start' : undefined,
     }),
-  reset: () => set({ ...perGameReset, game: undefined, screen: 'import', phase: 'idle', inputText: '' }),
+  reset: () =>
+    set({
+      ...perGameReset,
+      game: undefined,
+      screen: 'import',
+      phase: 'idle',
+      inputText: '',
+      colorFromUsername: false, // parity GAP-3: the note belongs to the previous game
+    }),
 }))

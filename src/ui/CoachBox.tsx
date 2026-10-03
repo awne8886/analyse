@@ -2,15 +2,60 @@
 // the Show best / Show reply / Retry / Prev / Next / Key Moves buttons, the Explain toggle (hotkey e), Retry
 // feedback and the key-moments strip. The Explain toggle hides only the coach text, the chip and the explanation
 // arrows and highlights; badges, move-list icons, the eval bar and the graph never depend on it.
-import { useReviewStore, useSettingsStore } from '../state'
+import { useId, useState, type FormEvent } from 'react'
+import { tryRetryText, useReviewStore, useSettingsStore } from '../state'
 import type { Explanation } from '../types/explain'
 import type { ImportedGame } from '../types/game'
 import type { GameReview } from '../types/review'
-import { moveLabel } from './format'
+import { moveLabel, openingAt } from './format'
 import { ClassificationIcon } from './icons/ClassificationIcon'
 import { renderKeyed } from './messages'
 import { goToPly, nextKeyMoment, step } from './navigation'
 import { t } from './strings'
+
+/** Keyboard entry for Retry (a11y M5): the board only takes pointer drags, so a typed SAN or UCI move is graded
+ *  the same way. The field stays mounted (read-only while a move is graded) so focus is never lost. */
+function RetryEntry({ busy }: { busy: boolean }) {
+  const id = useId()
+  const [text, setText] = useState('')
+  const [illegal, setIllegal] = useState(false)
+  const onSubmit = (e: FormEvent) => {
+    e.preventDefault()
+    if (busy || !text.trim()) return
+    const ok = tryRetryText(text)
+    setIllegal(!ok)
+    if (ok) setText('')
+  }
+  return (
+    <form className="retry-entry" onSubmit={onSubmit}>
+      <label htmlFor={id}>{t('retry.moveLabel')}</label>
+      <span className="retry-entry-line">
+        <input
+          id={id}
+          data-testid="retry-move-input"
+          type="text"
+          autoComplete="off"
+          spellCheck={false}
+          readOnly={busy}
+          value={text}
+          aria-invalid={illegal}
+          onChange={(e) => {
+            setText(e.target.value)
+            setIllegal(false)
+          }}
+        />
+        <button type="submit" data-testid="retry-move-submit" disabled={busy}>
+          {t('retry.play')}
+        </button>
+      </span>
+      {illegal ? (
+        <span className="retry-illegal" role="alert">
+          {t('retry.illegal')}
+        </span>
+      ) : null}
+    </form>
+  )
+}
 
 export function CoachBox({
   game,
@@ -46,14 +91,14 @@ export function CoachBox({
     done && move ? explanation.headline || `${move.san} ${t(`headline.${pr.classification}`)}` : undefined
   const keyTarget = nextKeyMoment(review, ply, userColor)
   const replyKnown = ply > 0 && (review?.plies[ply]?.bestUci || pr?.playedLine?.pv[1])
-  const inBook = c === 'book' && review?.opening
+  const opening = c === 'book' ? openingAt(game, review, ply) : undefined
 
   let body: string[] = []
   if (ply === 0) body = [t('coach.start')]
   else if (pr?.status === 'not-analysed') body = [renderKeyed({ key: 'E-9' })]
   else if (!done) body = [t('coach.pending')]
   else if (explanation.sentences.length) body = explanation.sentences.slice(0, 2)
-  else if (inBook && review?.opening) body = [t('coach.inBook', review.opening)]
+  else if (opening) body = [t('coach.inBook', opening)]
 
   return (
     <section className="coach-box panel" data-testid="coach-box">
@@ -62,7 +107,7 @@ export function CoachBox({
         <h2
           className="coach-headline"
           data-testid="coach-headline"
-          style={c ? { color: `var(--color-classification-${c})` } : undefined}
+          style={c ? { color: `var(--color-classification-text-${c})` } : undefined}
         >
           {headline ?? (move ? moveLabel(move) : t('import.title'))}
         </h2>
@@ -112,6 +157,7 @@ export function CoachBox({
           )}
         </div>
       ) : null}
+      {retry.active ? <RetryEntry key={ply} busy={retry.checking || retry.fen !== null} /> : null}
       <div className="coach-buttons">
         <button
           type="button"
@@ -156,7 +202,7 @@ export function CoachBox({
         </button>
       </div>
       {review?.keyMoments.length ? (
-        <div className="key-strip" aria-label={t('label.keyMoments')}>
+        <div className="key-strip" role="group" aria-label={t('label.keyMoments')}>
           {review.keyMoments.map((k) => {
             const kp = review.plies[k - 1]
             return (

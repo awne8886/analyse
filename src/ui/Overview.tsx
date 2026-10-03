@@ -10,7 +10,7 @@ import { oneDecimal } from './format'
 import { copyShareLink, goToPly } from './navigation'
 import { PhaseGrades } from './PhaseGrades'
 import { PlayersRow } from './PlayersRow'
-import { ProgressBar, ReviewBanners } from './ProgressBar'
+import { ReviewBanners } from './ProgressBar'
 import { t } from './strings'
 import { TallyTable } from './TallyTable'
 
@@ -94,11 +94,10 @@ export function Overview() {
 
   return (
     <section className="overview" data-testid="overview" aria-labelledby="overview-title">
-      <h1 id="overview-title" className="screen-title">
+      <h1 id="overview-title" className="screen-title" tabIndex={-1}>
         {t('overview.title')}
       </h1>
       <ReviewBanners />
-      <ProgressBar />
       {summary ? (
         <p className="summary panel" data-testid="summary">
           {summary}

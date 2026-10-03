@@ -159,13 +159,23 @@ async function openCached(game: ImportedGame, ply: number | undefined, fromReloa
   store().openGame(game, review, ply ?? 0)
   store().patch({ screen: ply !== undefined ? 'moves' : 'overview', colorFromUsername: false })
   writeUrlState({ game: game.id, ply })
-  if (review?.complete && !game.inProgress) {
+  // performance M3: a stored review that covers every move (a finished game, or an accepted in-progress game
+  // with no new moves) renders without booting the engine and without the E-3 banner
+  if (!needsEngine(game, review)) {
     store().patch({ phase: 'complete' })
     return
   }
   const firstOpen = review?.plies.find((p) => p.status !== 'done' && p.status !== 'not-analysed')
   if (review && fromReload) store().patch({ resumedFrom: firstOpen?.ply ?? review.plies.length + 1 })
   await runAnalysis(game, review, fromReload && review !== undefined)
+}
+
+/** True when some move of `game` has no finished ply in `review` (R16 lazy pool: only then is a worker needed). */
+export function needsEngine(game: ImportedGame, review: GameReview | undefined): boolean {
+  if (!review || review.gameId !== game.id || review.plies.length !== game.moves.length) return true
+  return review.plies.some(
+    (p, i) => p.uci !== game.moves[i].uci || (p.status !== 'done' && p.status !== 'not-analysed'),
+  )
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -263,6 +273,11 @@ async function doImport(parsed: ParsedInput, text: string | null): Promise<void>
     })
     pendingResume = resumeFrom
     pendingColor = usernameColor
+    // parity GAP-3 (G.3): the toggle shows the username-resolved colour while the user confirms
+    if (usernameColor) {
+      settings().update({ userColor: usernameColor })
+      store().patch({ colorFromUsername: true })
+    }
     return
   }
   await startGame(result.game, result.notice, usernameColor, resumeFrom)
@@ -369,9 +384,7 @@ export function ensureEngine(): Promise<{ pool: EngineApi; tier: Tier }> {
     return { pool, tier }
   })()
   session.enginePromise.catch((e: unknown) => {
-    session.enginePromise = null
-    session.pool?.dispose()
-    session.pool = null
+    discardPool()
     store().patch({ engine: { phase: 'error', key: 'E-2', message: (e as Error)?.message ?? String(e) } })
   })
   return session.enginePromise
@@ -398,12 +411,33 @@ export function explanationFor(
   )
 }
 
+/** Drops a failed pool so the next analysis boots fresh workers (performance H2: a pool that lost its last worker
+ *  must never be reused by the E-2 Retry). */
+function discardPool(): void {
+  session.enginePromise = null
+  session.pool?.dispose()
+  session.pool = null
+}
+
+/** Persists a review; a storage failure (quota, private mode) never becomes an engine error (performance L3). */
+async function persistQuietly(review: GameReview): Promise<void> {
+  try {
+    await persistReview(review)
+  } catch (e) {
+    console.warn('analyse: could not store the review', e)
+  }
+}
+
 async function runAnalysis(
   game: ImportedGame,
   resumeFrom: GameReview | undefined,
   fast: boolean,
 ): Promise<void> {
   cancelAnalysis()
+  if (resumeFrom && !needsEngine(game, resumeFrom)) {
+    store().patch({ review: resumeFrom, phase: 'complete', progress: undefined })
+    return // performance M3: nothing to evaluate, so no worker is created
+  }
   const ctrl = new AbortController()
   session.analysis = ctrl
   store().patch({ phase: 'analysing', progress: undefined })
@@ -418,27 +452,54 @@ async function runAnalysis(
   if (ctrl.signal.aborted || !session.device) return
   const profile = engineProfileFor(session.device, tierFor(settings().profile, engine.tier, fast))
   const live = () => !ctrl.signal.aborted && store().game?.id === game.id
+  // correctness L2: a ply's explanation needs the next ply's line (playedPv, replySan), which exists only once
+  // that ply is emitted, so each ply is explained again when its successor arrives; the corrected explanations
+  // are applied to every partial and to the final review, so the stored record matches what the UI shows.
+  const corrected = new Map<number, Explanation>()
+  const withCorrections = (rev: GameReview): GameReview =>
+    corrected.size
+      ? {
+          ...rev,
+          plies: rev.plies.map((p) =>
+            corrected.has(p.ply) ? { ...p, explanation: corrected.get(p.ply) as Explanation } : p,
+          ),
+        }
+      : rev
   try {
+    // R17 / C.1 item 5: Hash, MultiPV, ucinewgame and isready once per game (the pool keeps its workers)
+    await engine.pool.init(profile)
+    if (ctrl.signal.aborted) return
     const review = await analyzeGame(game, engine.pool, profile, {
       signal: ctrl.signal,
       resumeFrom,
       explainPly: (rev, ply) => explanationFor(rev, ply),
-      onPly: (_ply, partial) => {
-        void persistReview(partial)
-        if (live()) store().patch({ review: partial })
+      onPly: (ply, partial) => {
+        const prev = partial.plies[ply.ply - 2]
+        if (prev?.status === 'done' && ply.bestPv.length) {
+          try {
+            corrected.set(prev.ply, explanationFor(partial, prev.ply))
+          } catch {
+            /* keep the stored explanation */
+          }
+        }
+        const fixed = withCorrections(partial)
+        void persistQuietly(fixed)
+        if (live()) store().patch({ review: fixed })
       },
       onProgress: (p) => {
         if (live()) store().patch({ progress: p })
       },
     })
-    await persistReview(review)
-    if (live()) store().patch({ review, phase: 'complete', progress: undefined })
+    const final = withCorrections(review)
+    await persistQuietly(final)
+    if (live()) store().patch({ review: final, phase: 'complete', progress: undefined })
   } catch (e) {
     if (!live()) return
     if ((e as Error)?.name === 'AbortError') {
       store().patch({ phase: 'idle' }) // cancelled by stop()/dispose()/a newer job: not an engine failure
       return
     }
+    discardPool()
     store().patch({
       phase: 'idle',
       engine: { phase: 'error', key: 'E-2', message: (e as Error)?.message ?? String(e) },
@@ -448,9 +509,12 @@ async function runAnalysis(
   }
 }
 
-/** The E-2 Retry button: boot again and continue the current game from what is stored. */
+/** The E-2 Retry button: dispose the failed pool, boot a new one and continue the current game from what is
+ *  stored (performance H2). */
 export async function retryEngine(): Promise<void> {
   const game = store().game
+  cancelAnalysis()
+  discardPool()
   store().patch({ engine: { phase: 'not-loaded' } })
   if (game) await runAnalysis(game, store().review, false)
 }
@@ -537,6 +601,23 @@ export function tryRetryMove(from: string, to: string, promotion = 'q'): boolean
   store().patch({ retry: { active: true, checking: true, fen: mv.after } })
   void gradeRetry(move, game, review, ply)
   return true
+}
+
+/** A retried move typed as SAN ("Nf3") or UCI ("g1f3"): the keyboard path into Retry (a11y M5). */
+export function tryRetryText(text: string): boolean {
+  const { game, ply } = store()
+  const played = game?.moves[ply - 1]
+  const input = text.trim()
+  if (!played || !input) return false
+  const uci = /^([a-h][1-8])([a-h][1-8])([qrbn])?$/i.exec(input)
+  if (uci) return tryRetryMove(uci[1].toLowerCase(), uci[2].toLowerCase(), uci[3]?.toLowerCase())
+  let mv
+  try {
+    mv = new Chess(played.before).move(input)
+  } catch {
+    return false
+  }
+  return tryRetryMove(mv.from, mv.to, mv.promotion)
 }
 
 async function gradeRetry(

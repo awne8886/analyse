@@ -1,7 +1,7 @@
 // Pure display helpers: eval text (F.4), graph/bar scaling (G.9, G.19), move labels (E.6), results (F.4).
 import type { Score } from '../types/engine'
 import type { GameMove, ImportedGame } from '../types/game'
-import { REVIEW_CONFIG } from '../analysis'
+import { REVIEW_CONFIG, epdOf, lookupOpening } from '../analysis'
 import type { Classification, GameReview, PlyReview } from '../types/review'
 import { UI_STRINGS } from './strings'
 
@@ -110,4 +110,18 @@ export function phaseGradeClass(accuracy: number): Classification {
   const grades: Classification[] = ['best', 'excellent', 'good', 'inaccuracy', 'mistake']
   const i = REVIEW_CONFIG.phaseGradeBands.findIndex((band) => accuracy >= band)
   return i === -1 ? 'blunder' : grades[i]
+}
+
+/** The opening a ply has reached (G.22, parity GAP-4): inside the book prefix every position is in the table, so
+ *  each ply names its own opening; the last book ply is `review.opening` itself. Undefined outside the prefix. */
+export function openingAt(
+  game: ImportedGame,
+  review: GameReview | undefined,
+  ply: number,
+): { eco: string; name: string } | undefined {
+  const last = review?.opening
+  if (!last || ply < 1 || ply > last.lastBookPly) return undefined
+  if (ply === last.lastBookPly) return last
+  const move = game.moves[ply - 1]
+  return (move && lookupOpening(epdOf(move.after))) || last
 }

@@ -65,7 +65,7 @@ export function ImportScreen() {
 
   return (
     <section className="import-screen" aria-labelledby="import-title">
-      <h1 id="import-title" className="screen-title">
+      <h1 id="import-title" className="screen-title" tabIndex={-1}>
         {t('import.title')}
       </h1>
       <form className="import-form panel" onSubmit={onSubmit}>

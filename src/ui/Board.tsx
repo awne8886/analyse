@@ -1,7 +1,7 @@
 // The board (G.16 to G.18, G.23, G.26): react-chessboard 5 with Kaneo/cburnett pieces from public/pieces/, the
 // classification badge drawn by `squareRenderer` (which must render `children` and merge `squareStyles` itself),
 // from/to tints, arrows, click-to-step on the board halves, and drag-and-drop only in Retry mode.
-import { useCallback, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, type CSSProperties, type MouseEvent, type ReactNode } from 'react'
 import { Chessboard, defaultArrowOptions, type Arrow, type PieceRenderObject } from 'react-chessboard'
 import type { Classification } from '../types/review'
 import { BOARD_DARK, BOARD_LIGHT } from './colors'
@@ -26,6 +26,16 @@ function piecesFor(set: 'kaneo' | 'cburnett'): PieceRenderObject {
   )
 }
 const PIECES = { kaneo: piecesFor('kaneo'), cburnett: piecesFor('cburnett') }
+
+/** react-chessboard wraps every piece in a dnd-kit draggable (`tabindex=0`, `role=button`, no name) even when
+ *  dragging is off, and it has no keyboard sensor, so those wrappers are unnamed dead tab stops (a11y M4). They
+ *  are taken out of the tab order and the accessibility tree; Retry takes keyboard moves through the coach box. */
+function hidePieceWrappers(root: HTMLElement): void {
+  for (const el of root.querySelectorAll<HTMLElement>('[aria-roledescription="draggable"]')) {
+    if (el.getAttribute('tabindex') !== '-1') el.setAttribute('tabindex', '-1')
+    if (el.getAttribute('aria-hidden') !== 'true') el.setAttribute('aria-hidden', 'true')
+  }
+}
 const ARROW_OPTIONS = { ...defaultArrowOptions, opacity: 1, activeOpacity: 1 }
 
 export interface BoardBadge {
@@ -75,6 +85,21 @@ export function Board({
     [squareStyles, badge],
   )
 
+  const boardRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const root = boardRef.current
+    if (!root) return
+    hidePieceWrappers(root)
+    const observer = new MutationObserver(() => hidePieceWrappers(root))
+    observer.observe(root, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: ['tabindex', 'aria-hidden'],
+    })
+    return () => observer.disconnect()
+  }, [])
+
   const reducedMotion =
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true
 
@@ -86,6 +111,7 @@ export function Board({
 
   return (
     <div
+      ref={boardRef}
       className="board"
       data-testid="board"
       aria-label={t('board.label', { orientation: t(`color.${orientation}`) })}

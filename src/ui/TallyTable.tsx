@@ -22,7 +22,7 @@ export function TallyTable({ review }: { review?: GameReview }) {
             <td className="tally-count" data-testid={`tally-white-${c}`}>
               {review?.tally.white[c] ?? 0}
             </td>
-            <td className="tally-label" style={{ color: `var(--color-classification-${c})` }}>
+            <td className="tally-label" style={{ color: `var(--color-classification-text-${c})` }}>
               <ClassificationIcon classification={c} size={20} decorative />
               <span>{t(`class.${c}`)}</span>
             </td>

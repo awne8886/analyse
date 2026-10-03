@@ -38,13 +38,18 @@ export function nextKeyMoment(
 
 const TYPING = new Set(['INPUT', 'TEXTAREA', 'SELECT'])
 
-/** Global review hotkeys (G.23): Left/Right, Home/End, `f` flip, `e` Explain. Returns true when handled. */
+/** Global review hotkeys (G.23): Left/Right, Home/End, `f` flip, `e` Explain. Returns true when handled. Keys a
+ *  focused widget already handled (the eval graph slider) and keys on the board (a piece drag in Retry, a11y M5)
+ *  are left alone. */
 export function handleKey(
-  e: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey' | 'target'>,
+  e: Pick<KeyboardEvent, 'key' | 'altKey' | 'ctrlKey' | 'metaKey' | 'target'> & {
+    defaultPrevented?: boolean
+  },
 ): boolean {
-  if (e.altKey || e.ctrlKey || e.metaKey) return false
+  if (e.altKey || e.ctrlKey || e.metaKey || e.defaultPrevented) return false
   const target = e.target as HTMLElement | null
   if (target && (TYPING.has(target.tagName) || target.isContentEditable)) return false
+  if (target?.closest?.('[data-testid="board"]')) return false
   const { screen, game } = useReviewStore.getState()
   if (!game || (screen !== 'moves' && screen !== 'overview')) return false
   switch (e.key) {
