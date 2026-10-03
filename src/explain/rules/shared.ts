@@ -4,7 +4,7 @@ import { REVIEW_CONFIG } from '../../analysis'
 import type { Arrow, Motif, MoveFacts, Voice } from '../../types/explain'
 import type { Classification } from '../../types/review'
 import { withTurn } from '../detectors'
-import { materialAlong } from '../facts'
+import { materialAlong, type MaterialLine } from '../facts'
 import { describeMaterial, fill, PIECE_NAME, SWING, T, type SwingKey, type TemplateId } from '../templates'
 
 /** Every concrete claim carries the engine (or board) data it rests on. */
@@ -109,26 +109,6 @@ export function numberedLine(f: MoveFacts, offset: number, sans: string[]): stri
     .join(' ')
 }
 
-/** `{line}`: the first plies of a line up to its last capture (at most 3 plies, at least 1). */
-export function captureLine(sans: string[]): string {
-  const head = sans.slice(0, 3)
-  let end = 0
-  head.forEach((s, i) => {
-    if (s.includes('x')) end = i + 1
-  })
-  return head.slice(0, Math.max(1, end)).join(' ')
-}
-
-/** `{pvShort}`: 3 to 5 plies of a line, cut after its last capture, with move numbers. */
-export function pvShort(f: MoveFacts, offset: number, sans: string[]): string {
-  const head = sans.slice(0, 5)
-  let end = 0
-  head.forEach((s, i) => {
-    if (s.includes('x') || s.includes('=')) end = i + 1
-  })
-  return numberedLine(f, offset, head.slice(0, Math.max(Math.min(3, head.length), end)))
-}
-
 const boardOf = (fen?: string): Chess | null => {
   if (!fen) return null
   try {
@@ -180,27 +160,97 @@ export const boards = (f: MoveFacts) => {
   return before && played ? { before, after: played.board, move: played.move } : null
 }
 
-/** `{material}` lost along the played line (mover POV), with the pieces named when the board is known. */
-export function lossMaterial(f: MoveFacts): string {
-  if (f.fenBefore) {
-    const ml = materialAlong(f.fenBefore, [f.san, ...f.playedPv], f.color, 'loss')
-    if (-ml.net === f.playedMaterialLoss)
-      return describeMaterial(f.playedMaterialLoss, ml.lost, ml.gained, ml.captures)
-  }
-  return describeMaterial(f.playedMaterialLoss)
-}
-/** `{material}` won along `sans` played from the position before the move. */
-export function gainMaterial(f: MoveFacts, sans: string[], gain: number): string {
-  if (f.fenBefore) {
-    const ml = materialAlong(f.fenBefore, sans, f.color, 'gain')
-    if (ml.net === gain) return describeMaterial(gain, ml.gained, ml.lost, ml.captures)
-  }
-  return describeMaterial(gain)
+// --------------------------------------------------------------------------------------------------------------
+// Material along a line (E.2, E.3): every material claim quotes the window it was counted on
+
+/** A material figure along a line that starts with the move (or the best move), and the plies it rests on. */
+export interface Counted {
+  /** Pawn units for the side the claim is about: the mover's gain, or the mover's loss. */
+  net: number
+  /** The plies of the line the figure was counted on (index 0 is the move itself); a claim quotes exactly these. */
+  shown: string[]
+  /** `describeMaterial` lists: what the losing side gave up and took back inside `shown`. */
+  lost: string[]
+  gained: string[]
+  captures: number
+  /** Captures inside `shown`; null for facts without a board to replay them on (see `bare`). */
+  taken: MaterialLine['taken'] | null
 }
 
-/** Material the played move nets for the mover (positive classes): the best line when it is the best move. */
-export const playedGain = (f: MoveFacts) => (f.bestSan === f.san ? f.bestMaterialGain : -f.playedMaterialLoss)
-export const playedGainLine = (f: MoveFacts) => (f.bestSan === f.san ? f.bestPv : [f.san, ...f.playedPv])
+/**
+ * Facts that carry no board, or whose PV does not reproduce their own material figure, cannot have been built by
+ * `buildMoveFacts` (which derives every figure from these PVs on `fenBefore`); they are the hand-written facts of
+ * the E.5 `explain()` fixtures and are judged on their numeric fields alone, with the shortest window that
+ * contains their captures.
+ */
+function bare(net: number, line: string[], kind: 'gain' | 'loss'): Counted {
+  let end = 0
+  if (kind === 'gain') {
+    line.slice(0, 5).forEach((s, i) => {
+      if (s.includes('x') || s.includes('=')) end = i + 1
+    })
+    end = Math.max(Math.min(3, line.length), end)
+  } else {
+    line.slice(1, 4).forEach((s, i) => {
+      if (s.includes('x')) end = i + 2
+    })
+    end = Math.max(Math.min(2, line.length), end)
+  }
+  return { net, shown: line.slice(0, end), lost: [], gained: [], captures: 0, taken: null }
+}
+
+/** Replays `line` from the board before the move; null when the facts carry no board or the line is illegal. */
+function replay(f: MoveFacts, line: string[], measure: 'gain' | 'loss'): MaterialLine | null {
+  if (!f.fenBefore) return null
+  try {
+    const ml = materialAlong(f.fenBefore, line, f.color, measure, line.length)
+    return ml.plies === line.length ? ml : null
+  } catch {
+    return null
+  }
+}
+
+function counted(ml: MaterialLine, line: string[], kind: 'gain' | 'loss'): Counted {
+  const gain = kind === 'gain'
+  return {
+    net: gain ? ml.net : -ml.net,
+    shown: line.slice(0, ml.window),
+    lost: gain ? ml.gained : ml.lost,
+    gained: gain ? ml.lost : ml.gained,
+    captures: ml.captures,
+    taken: ml.taken,
+  }
+}
+
+/** What the engine's best line wins for the mover (measured as a gain: an unanswered final capture is dropped). */
+export function bestCount(f: MoveFacts): Counted {
+  const ml = replay(f, f.bestPv, 'gain')
+  if (ml && ml.net === f.bestMaterialGain) return counted(ml, f.bestPv, 'gain')
+  return bare(f.bestMaterialGain, f.bestPv, 'gain')
+}
+
+/** What the played move loses along its line (measured as a loss: an unanswered final reply capture is dropped). */
+export function lossCount(f: MoveFacts): Counted {
+  const line = [f.san, ...f.playedPv]
+  const ml = replay(f, line, 'loss')
+  if (ml && -ml.net === f.playedMaterialLoss) return counted(ml, line, 'loss')
+  return bare(f.playedMaterialLoss, line, 'loss')
+}
+
+/**
+ * What the played move wins for the mover (positive classes): the best line when it is the best move, otherwise
+ * the played line re-counted as a gain, so a final capture by the mover that the PV leaves unanswered is not a win.
+ */
+export function gainCount(f: MoveFacts): Counted {
+  if (f.bestSan === f.san) return bestCount(f)
+  const line = [f.san, ...f.playedPv]
+  const check = replay(f, line, 'loss')
+  const ml = check && -check.net === f.playedMaterialLoss ? replay(f, line, 'gain') : null
+  return ml ? counted(ml, line, 'gain') : bare(-f.playedMaterialLoss, line, 'gain')
+}
+
+/** `{material}` (E.6) for a counted figure, with the pieces named when the line was replayed. */
+export const materialOf = (c: Counted) => describeMaterial(c.net, c.lost, c.gained, c.captures)
 
 // --------------------------------------------------------------------------------------------------------------
 // Tactics (E.6 `{tacticDescription}`), as an "-ing" phrase and a third-person verb phrase
@@ -290,6 +340,47 @@ export function describeTactic(
   }
 }
 
+/**
+ * The motif's own consequence (R24, E.3): the line mates, or it nets at least `minGain` for the attacker and the
+ * attacker captures, inside the counted window, a piece that stood on one of the motif's target squares (fork
+ * targets, the pinned piece or the piece behind it, the skewered rear piece, the piece uncovered or trapped; for a
+ * discovered check the capture is the attacker's next move). `first` is the line index of the move that creates the motif; a mate
+ * threat is a board fact, so it needs only the line's verdict. Bare facts carry no captures to check.
+ */
+export function motifProven(
+  m: Motif,
+  c: Counted,
+  opts: { first: number; byMover: boolean; mates: boolean; minGain: number },
+): boolean {
+  if (opts.mates) return true
+  if (c.net < opts.minGain) return false
+  if (c.taken === null || m.type === 'mateThreat') return true
+  const hits = (squares: string[]) =>
+    c.taken!.some(
+      (t) => t.byMover === opts.byMover && t.ply > opts.first && t.path.some((sq) => squares.includes(sq)),
+    )
+  switch (m.type) {
+    case 'fork':
+      return hits(m.targets)
+    case 'pin':
+      return hits([m.pinned, m.to])
+    case 'skewer':
+      return hits([m.behind])
+    case 'discoveredAttack':
+      return hits([m.target])
+    case 'trapped':
+      return hits([m.square])
+    case 'discoveredCheck':
+      return c.taken.some((t) => t.byMover === opts.byMover && t.ply === opts.first + 2)
+    case 'freePiece':
+      return c.taken.some(
+        (t) => t.byMover === opts.byMover && t.ply === opts.first && t.path.at(-1) === m.square,
+      )
+    default:
+      return false
+  }
+}
+
 function firstTactic(
   motifs: Motif[],
   agreed: (m: Motif) => boolean,
@@ -306,35 +397,49 @@ function firstTactic(
   return null
 }
 
-/** The best move's tactic, claimed only when the engine's best line agrees (material or mate). */
+/** Whether the best move's motif `m` shows its consequence along the engine's best line. */
+export const bestMotifProven = (f: MoveFacts, m: Motif, minGain = 1) =>
+  motifProven(m, bestCount(f), { first: 0, byMover: true, mates: (f.bestLeadsToMateIn ?? 0) > 0, minGain })
+/** The best move's tactic, claimed only when the engine's best line shows the motif's consequence. */
 export function bestTactic(f: MoveFacts, minGain = 1): Tactic | null {
   return firstTactic(
     f.motifsBest,
-    (m) =>
-      m.type === 'mateThreat'
-        ? (f.bestLeadsToMateIn ?? 0) > 0 || f.bestMaterialGain >= minGain
-        : f.bestMaterialGain >= minGain,
+    (m) => bestMotifProven(f, m, minGain),
     (sq) => pieceBefore(f, sq),
     (sq) => pieceBefore(f, sq),
   )
 }
 /** `bestTactic` behind the depth gate (the Excellent sentence and the Excellent best line). */
 export const bestTacticGated = (f: MoveFacts) => (gateOpen(f) ? bestTactic(f) : null)
-/** The played move's tactic, claimed only when the played line agrees. */
+/** Whether the played move's motif `m` shows its consequence along the played line. */
+export const playedMotifProven = (f: MoveFacts, m: Motif) =>
+  motifProven(m, gainCount(f), { first: 0, byMover: true, mates: (f.mateAfter ?? 0) > 0, minGain: 1 })
+/** The played move's tactic, claimed only when the played line shows the motif's consequence. */
 export function playedTactic(f: MoveFacts, types: readonly string[] = TACTIC_ORDER): Tactic | null {
   return firstTactic(
     f.motifsPlayed,
-    (m) => (m.type === 'mateThreat' ? (f.mateAfter ?? 0) > 0 || playedGain(f) >= 1 : playedGain(f) >= 1),
+    (m) => playedMotifProven(f, m),
     (sq) => pieceAfter(f, sq),
     (sq) => pieceBefore(f, sq),
     types,
   )
 }
+/**
+ * Whether the opponent's motif `m` shows its consequence along the played line (index 0 is the move, the reply is
+ * index 1; motifs the move itself allows count captures from the reply on).
+ */
+export const allowedMotifProven = (f: MoveFacts, m: Motif, minGain = 1) =>
+  motifProven(m, lossCount(f), {
+    first: m.type === 'discoveredCheck' || m.type === 'freePiece' ? 1 : 0,
+    byMover: false,
+    mates: f.opponentMateIn !== undefined,
+    minGain,
+  })
 /** The opponent's tactic after the reply, claimed only when the played line shows its consequence. */
 export function allowedTactic(f: MoveFacts): Tactic | null {
   return firstTactic(
     f.motifsAllowed,
-    () => f.playedMaterialLoss >= 1 || f.opponentMateIn !== undefined,
+    (m) => allowedMotifProven(f, m),
     (sq) => pieceAfterReply(f, sq),
     (sq) => pieceAfter(f, sq),
   )

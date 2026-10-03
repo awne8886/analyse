@@ -1,5 +1,15 @@
 // Miss rules (PROMPT.md Appendix E.4, "Miss").
-import { bestTactic, gainMaterial, generic, hasBest, pieceBefore, rule, type Rule } from './shared'
+import {
+  bestCount,
+  bestMotifProven,
+  bestTactic,
+  generic,
+  hasBest,
+  materialOf,
+  pieceBefore,
+  rule,
+  type Rule,
+} from './shared'
 
 export const missedForcedMate = rule({
   code: 'MissedWin(ForcedMate)',
@@ -19,7 +29,7 @@ export const missedFreePiece = rule({
   when: (f) => hasBest(f) && f.bestMaterialGain >= 1,
   prove: (f) => {
     const m = f.motifsBest.find((x) => x.type === 'freePiece')
-    if (!m || m.type !== 'freePiece') return null
+    if (!m || m.type !== 'freePiece' || !bestMotifProven(f, m)) return null
     return {
       tpl: 'missedFreePiece',
       cites: { freePiece: m.square, bestMaterialGain: f.bestMaterialGain },
@@ -49,12 +59,16 @@ export const missedWinsMaterial = rule({
   code: 'MissedWin(Win)',
   arrows: ['best'],
   when: (f) => hasBest(f) && f.bestMaterialGain >= 1,
-  prove: (f) => ({
-    tpl: 'missedWinsMaterial',
-    cites: { bestMaterialGain: f.bestMaterialGain, bestPv: f.bestPv },
-    squares: [],
-    vars: { material: gainMaterial(f, f.bestPv, f.bestMaterialGain) },
-  }),
+  prove: (f) => {
+    const c = bestCount(f)
+    if (c.net < 1) return null
+    return {
+      tpl: 'missedWinsMaterial',
+      cites: { bestMaterialGain: c.net, counted: c.shown },
+      squares: [],
+      vars: { material: materialOf(c) },
+    }
+  },
 })
 
 export const MISS_RULES: Rule[] = [

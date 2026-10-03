@@ -1,13 +1,15 @@
 // Blunder rules (PROMPT.md Appendix E.4, "Blunder"), in binding order. A Blunder never says "wins" (E.3).
 import { Chess } from 'chess.js'
 import { VAL } from '../detectors'
+import type { MoveFacts } from '../../types/explain'
 import {
-  captureLine,
-  gainMaterial,
+  allowedMotifProven,
+  bestCount,
   generic,
   hasBest,
   letterAfter,
-  lossMaterial,
+  lossCount,
+  materialOf,
   pieceAfter,
   rule,
   sanDest,
@@ -18,8 +20,22 @@ import {
   type Rule,
 } from './shared'
 
+/** E.3 PV truncation: reply-based rules need the reply and at least one ply after it. */
 const replyProven = (f: { replySan?: string; playedPv: string[] }) =>
   Boolean(f.replySan) && f.playedPv.length >= 2
+
+/** E.6 `{materialDetail}` is at most 3 plies, so `{line}` (the reply plus the detail) is at most 4. */
+const LINE_MAX = 4
+/**
+ * The loss along the played line and `{line}`: exactly the counted plies after the move (the reply first), which
+ * hold every capture the figure rests on; null when the loss is under `min` or its window is longer than E.6 allows.
+ */
+function lossLine(f: MoveFacts, min: number) {
+  const c = lossCount(f)
+  const line = c.shown.slice(1)
+  if (c.net < min || line.length === 0 || line.length > LINE_MAX) return null
+  return { c, line: line.join(' ') }
+}
 
 export const hangsMate = rule({
   code: 'HangsMate',
@@ -59,7 +75,7 @@ export const gettingMated = rule({
 export const hangsPiece = rule({
   code: 'HangsPiece',
   arrows: ['reply'],
-  when: (f) => Boolean(f.replySan) && f.motifsAllowed.some((m) => m.type === 'hangs'),
+  when: (f) => replyProven(f) && f.motifsAllowed.some((m) => m.type === 'hangs'),
   prove: (f): Proof | null => {
     const reply = f.replySan!
     for (const m of f.motifsAllowed) {
@@ -70,12 +86,14 @@ export const hangsPiece = rule({
         const cites = { hangs: m.squares, replySan: reply, playedMaterialLoss: f.playedMaterialLoss }
         if (reply.includes('x') && sanDest(reply) === sq)
           return { tpl: 'hangsPiece', cites, squares: [sq], vars: { piece, square: sq } }
-        if (letter && replyProven(f) && f.playedMaterialLoss >= VAL[letter])
+        const lost = letter ? lossLine(f, VAL[letter]) : null
+        const takenOnSq = lost && (lost.c.taken?.some((t) => !t.byMover && t.path.includes(sq)) ?? true)
+        if (lost && takenOnSq)
           return {
             tpl: 'hangsPieceLine',
-            cites,
+            cites: { ...cites, counted: lost.c.shown },
             squares: [sq],
-            vars: { piece, square: sq, line: captureLine(f.playedPv) },
+            vars: { piece, square: sq, line: lost.line },
           }
       }
     }
@@ -88,7 +106,7 @@ export const permitsFork = rule({
   arrows: ['reply'],
   when: (f) => replyProven(f) && f.playedMaterialLoss >= 2,
   prove: (f) => {
-    const fork = f.motifsAllowed.find((m) => m.type === 'fork')
+    const fork = f.motifsAllowed.find((m) => m.type === 'fork' && allowedMotifProven(f, m, 2))
     if (!fork || fork.type !== 'fork') return null
     const [a, b] = fork.targets
     return {
@@ -105,7 +123,9 @@ export const permitsPin = rule({
   arrows: ['reply'],
   when: (f) => replyProven(f) && f.playedMaterialLoss >= 1,
   prove: (f) => {
-    const m = f.motifsAllowed.find((x) => x.type === 'pin' || x.type === 'skewer')
+    const m = f.motifsAllowed.find(
+      (x) => (x.type === 'pin' || x.type === 'skewer') && allowedMotifProven(f, x),
+    )
     if (!m || (m.type !== 'pin' && m.type !== 'skewer')) return null
     const front = m.type === 'pin' ? m.pinned : m.front
     const behind = m.type === 'pin' ? m.to : m.behind
@@ -127,7 +147,9 @@ export const allowsDiscovered = rule({
   arrows: ['reply'],
   when: (f) => replyProven(f) && (f.playedMaterialLoss >= 1 || f.opponentMateIn !== undefined),
   prove: (f) => {
-    const m = f.motifsAllowed.find((x) => x.type === 'discoveredAttack' || x.type === 'discoveredCheck')
+    const m = f.motifsAllowed.find(
+      (x) => (x.type === 'discoveredAttack' || x.type === 'discoveredCheck') && allowedMotifProven(f, x),
+    )
     if (!m || (m.type !== 'discoveredAttack' && m.type !== 'discoveredCheck')) return null
     const t = targetAfterReply(f, m.target)
     const check = m.type === 'discoveredCheck'
@@ -149,12 +171,16 @@ export const losesMaterial = (tpl: 'losesMaterial' | 'losesMaterialSoft') =>
     code: 'LosesMaterial',
     arrows: ['reply'],
     when: (f) => replyProven(f) && f.playedMaterialLoss >= 1,
-    prove: (f) => ({
-      tpl,
-      cites: { playedMaterialLoss: f.playedMaterialLoss, playedPv: f.playedPv },
-      squares: [],
-      vars: { material: lossMaterial(f), line: captureLine(f.playedPv) },
-    }),
+    prove: (f) => {
+      const lost = lossLine(f, 1)
+      if (!lost) return null
+      return {
+        tpl,
+        cites: { playedMaterialLoss: lost.c.net, counted: lost.c.shown },
+        squares: [],
+        vars: { material: materialOf(lost.c), line: lost.line },
+      }
+    },
   })
 
 export const missedMate = rule({
@@ -174,12 +200,13 @@ export const missedWin = rule({
   arrows: ['best'],
   when: hasBest,
   prove: (f): Proof | null => {
-    if (f.bestMaterialGain >= 3)
+    const c = bestCount(f)
+    if (c.net >= 3)
       return {
         tpl: 'missedWinMaterial',
-        cites: { bestMaterialGain: f.bestMaterialGain, bestPv: f.bestPv },
+        cites: { bestMaterialGain: c.net, counted: c.shown },
         squares: [],
-        vars: { material: gainMaterial(f, f.bestPv, f.bestMaterialGain) },
+        vars: { material: materialOf(c) },
       }
     const { povBefore: b, povAfter: a } = f
     if (b.type === 'cp' && a.type === 'cp' && b.value >= 300 && a.value <= 50)

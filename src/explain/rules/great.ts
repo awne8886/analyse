@@ -1,6 +1,6 @@
 // Great rules (PROMPT.md Appendix E.4, "Great").
 import { REVIEW_CONFIG } from '../../analysis'
-import { bucket, generic, playedGain, playedTactic, rule, type Proof, type Rule } from './shared'
+import { bucket, gainCount, generic, playedTactic, rule, type Proof, type Rule } from './shared'
 
 export const critical = rule({
   code: 'Critical(Find)',
@@ -41,7 +41,7 @@ export const greatFind = rule({
       cites: {
         previous: f.previous!.classification,
         motif: t ? t.motif.type : 'mate',
-        netGain: playedGain(f),
+        netGain: gainCount(f).net,
         mateAfter: f.mateAfter ?? 'none',
       },
       squares: t ? t.squares : [],

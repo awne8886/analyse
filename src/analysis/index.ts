@@ -3,6 +3,7 @@ export { REVIEW_CONFIG, LICHESS_PRESET, clamp, type AccuracyPreset } from './con
 export type { ClassifyContext, ClassifyResult, AccuracyInput, RatingInput, AnalyzeOptions } from './types'
 export { winPct, winPctWhite } from './winPercent'
 export { classifyPly } from './classify'
+export { toMover } from './classify'
 export { moveAccuracy, gameAccuracy } from './accuracy'
 export { estimateRating } from './rating'
 export { dividePhases, majorsAndMinors, backrankSparse, mixedness, phaseGrade } from './phases'
