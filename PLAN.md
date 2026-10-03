@@ -139,5 +139,5 @@ Phase 4 reports: docs/review/correctness.md (3 high, 2 medium, 10 low), a11y.md 
 | review-parity | 4 | general-purpose (inherit) | main checkout (docs/review/parity.md) | done |
 | fix-ui | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
 | fix-explain | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
-| fix-engine | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
+| fix-engine | 4 | general-purpose (inherit) | worktree-agent-ab35510334f183132 @ 01f5087 | merged |
 | docs-deploy | 5 | general-purpose (sonnet) | worktree-agent-a15b025b9dec89407 @ 7ded9ab | merged |
