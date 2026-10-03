@@ -1,0 +1,37 @@
+{
+  "url": "https://lichess.org/game/export/4S1PZUvW?pgnInJson=true&clocks=true&evals=false&opening=true&accuracy=true",
+  "status": 200,
+  "contentType": "application/json",
+  "acao": "*",
+  "body": {
+    "id": "4S1PZUvW",
+    "rated": false,
+    "variant": "fromPosition",
+    "speed": "correspondence",
+    "perf": "correspondence",
+    "createdAt": 1786204705775,
+    "lastMoveAt": 1786204886666,
+    "status": "mate",
+    "source": "position",
+    "players": {
+      "white": {
+        "user": {
+          "name": "IQ_4U_Academy",
+          "id": "iq_4u_academy"
+        },
+        "rating": 1500,
+        "provisional": true
+      },
+      "black": {
+        "aiLevel": 8
+      }
+    },
+    "initialFen": "8/8/8/8/3k4/8/R7/R3K3 w Q - 0 1",
+    "winner": "white",
+    "moves": "Re2 Kd3 Rd1+ Kc3 Re8 Kc2 Rc8+ Kb2 Rd7 Ka3 Rb8 Ka2 Ra7#",
+    "pgn": "[Event \"casual correspondence game\"]\n[Site \"https://lichess.org/4S1PZUvW\"]\n[Date \"2026.08.08\"]\n[Round \"-\"]\n[White \"IQ_4U_Academy\"]\n[Black \"lichess AI level 8\"]\n[Result \"1-0\"]\n[GameId \"4S1PZUvW\"]\n[UTCDate \"2026.08.08\"]\n[UTCTime \"15:58:25\"]\n[WhiteElo \"1500\"]\n[BlackElo \"?\"]\n[Variant \"From Position\"]\n[TimeControl \"-\"]\n[Termination \"Normal\"]\n[FEN \"8/8/8/8/3k4/8/R7/R3K3 w Q - 0 1\"]\n[SetUp \"1\"]\n\n1. Re2 Kd3 2. Rd1+ Kc3 3. Re8 Kc2 4. Rc8+ Kb2 5. Rd7 Ka3 6. Rb8 Ka2 7. Ra7# 1-0\n\n\n",
+    "division": {
+      "end": 0
+    }
+  }
+}

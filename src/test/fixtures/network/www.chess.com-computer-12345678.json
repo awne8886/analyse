@@ -1,0 +1,9 @@
+{
+  "url": "https://www.chess.com/computer/callback/game/12345678",
+  "status": 404,
+  "contentType": "application/json",
+  "acao": null,
+  "body": {
+    "error": "Game not found"
+  }
+}

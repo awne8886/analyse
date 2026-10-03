@@ -1,0 +1,68 @@
+{
+  "url": "https://www.chess.com/callback/live/game/999000000005",
+  "status": 200,
+  "contentType": "application/json",
+  "acao": null,
+  "body": {
+    "game": {
+      "id": 999000000005,
+      "moveList": "mCYI",
+      "plyCount": 2,
+      "pgnHeaders": {
+        "Event": "Live Chess",
+        "Site": "Chess.com",
+        "Date": "2026.01.01",
+        "White": "handmade_white",
+        "Black": "handmade_black",
+        "Result": "1-0",
+        "ECO": "C46",
+        "WhiteElo": 1500,
+        "BlackElo": 1500,
+        "TimeControl": "600",
+        "EndTime": "12:00:00 GMT+0000",
+        "Termination": "handmade_white won by resignation",
+        "SetUp": "1",
+        "FEN": "rkqbbnnr/pppppppp/8/8/8/8/PPPPPPPP/RKQBBNNR w HAha - 0 1"
+      },
+      "initialSetup": "rkqbbnnr/pppppppp/8/8/8/8/PPPPPPPP/RKQBBNNR w HAha - 0 1",
+      "isFinished": true,
+      "isCheckmate": false,
+      "isStalemate": false,
+      "type": "chess",
+      "typeName": "Standard Chess",
+      "gameEndReason": "resign",
+      "resultMessage": "handmade_white won by resignation",
+      "colorOfWinner": "white",
+      "endTime": 1767268800,
+      "moveTimestamps": "6000,6000",
+      "baseTime1": 6000,
+      "timeIncrement1": 0,
+      "isVsComputer": false,
+      "partnerGameId": null
+    },
+    "players": {
+      "top": {
+        "username": "handmade_black",
+        "color": "black",
+        "rating": 1500,
+        "chessTitle": null,
+        "avatarUrl": "",
+        "countryName": "Germany",
+        "countryId": 70,
+        "isComputer": false,
+        "flair": null
+      },
+      "bottom": {
+        "username": "handmade_white",
+        "color": "white",
+        "rating": 1500,
+        "chessTitle": null,
+        "avatarUrl": "",
+        "countryName": "Germany",
+        "countryId": 70,
+        "isComputer": false,
+        "flair": null
+      }
+    }
+  }
+}

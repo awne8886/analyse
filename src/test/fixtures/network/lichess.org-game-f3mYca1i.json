@@ -1,0 +1,109 @@
+{
+  "url": "https://lichess.org/game/export/f3mYca1i?pgnInJson=true&clocks=true&evals=false&opening=true&accuracy=true",
+  "status": 200,
+  "contentType": "application/json",
+  "acao": "*",
+  "body": {
+    "id": "f3mYca1i",
+    "rated": true,
+    "variant": "standard",
+    "speed": "blitz",
+    "perf": "blitz",
+    "createdAt": 1790964658454,
+    "status": "started",
+    "source": "pool",
+    "players": {
+      "white": {
+        "user": {
+          "name": "Chesskingoriginal",
+          "title": "NM",
+          "id": "chesskingoriginal"
+        },
+        "rating": 2812,
+        "ratingDiff": 7
+      },
+      "black": {
+        "user": {
+          "name": "arturchix",
+          "title": "GM",
+          "id": "arturchix"
+        },
+        "rating": 2844,
+        "ratingDiff": -6
+      }
+    },
+    "opening": {
+      "eco": "B04",
+      "name": "Alekhine Defense: Modern Variation, Larsen Variation",
+      "ply": 8
+    },
+    "moves": "e4 Nf6 e5 Nd5 Nf3 d6 d4 dxe5 Nxe5 c6 Be2 Bf5 O-O Nd7 Nf3 N7f6 Re1 e6 Bd3 Bxd3 Qxd3 Be7 c4 Nb6 Nc3 O-O Bg5 h6 Bh4 Rc8 Rad1 Re8 b3 Nbd7 Qe2 Nf8 Ne5 N6d7 Bxe7 Rxe7 Ne4 Qc7 f4 f6 Nd3 Rd8 c5 Nb8 Nd6 Rxd6 cxd6 Qxd6 Nc5 Qxf4 Qc4 Qd6 Re2 Qd5 Qxd5 cxd5",
+    "clocks": [
+      18003,
+      18003,
+      17899,
+      17955,
+      17899,
+      17891,
+      17867,
+      17835,
+      17867,
+      17747,
+      17739,
+      17667,
+      17643,
+      17611,
+      17579,
+      17451,
+      17459,
+      17411,
+      17411,
+      17203,
+      17411,
+      16995,
+      17363,
+      16691,
+      17203,
+      16611,
+      17035,
+      16363,
+      16931,
+      15507,
+      16603,
+      15027,
+      16259,
+      14651,
+      15939,
+      14443,
+      15587,
+      14003,
+      15275,
+      13875,
+      15211,
+      13619,
+      14867,
+      13267,
+      14475,
+      13083,
+      13307,
+      12595,
+      13171,
+      12531,
+      13083,
+      12531,
+      13011,
+      12019,
+      12691,
+      11883,
+      12499,
+      11715,
+      12243,
+      11627
+    ],
+    "division": {
+      "middle": 27,
+      "end": 60
+    }
+  },
+  "derived": "Frozen in-progress state for the I-20 test: derived on 2026-10-02 from the real export (lichess.org-game-f3mYca1i-finished.json, which had finished by recording time): status set to started, winner/pgn/clock removed, moves cut to the first 60 plies."
+}

@@ -1,0 +1,9 @@
+{
+  "url": "https://api.chess.com/pub/player/anomen_s/games/2025/05",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "acao": "*",
+  "body": {
+    "games": []
+  }
+}

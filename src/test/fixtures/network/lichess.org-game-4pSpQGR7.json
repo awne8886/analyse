@@ -1,0 +1,61 @@
+{
+  "url": "https://lichess.org/game/export/4pSpQGR7?pgnInJson=true&clocks=true&evals=false&opening=true&accuracy=true",
+  "status": 200,
+  "contentType": "application/json",
+  "acao": "*",
+  "body": {
+    "id": "4pSpQGR7",
+    "rated": false,
+    "variant": "standard",
+    "speed": "correspondence",
+    "perf": "correspondence",
+    "createdAt": 1515811968418,
+    "lastMoveAt": 1515811968418,
+    "status": "started",
+    "source": "import",
+    "players": {
+      "white": {
+        "name": "White",
+        "analysis": {
+          "inaccuracy": 1,
+          "mistake": 3,
+          "blunder": 4,
+          "acpl": 114,
+          "accuracy": 63,
+          "phases": {
+            "opening": 60,
+            "middlegame": 54
+          }
+        }
+      },
+      "black": {
+        "name": "Black",
+        "analysis": {
+          "inaccuracy": 3,
+          "mistake": 2,
+          "blunder": 2,
+          "acpl": 69,
+          "accuracy": 73,
+          "phases": {
+            "opening": 69,
+            "middlegame": 62
+          }
+        }
+      }
+    },
+    "initialFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
+    "opening": {
+      "eco": "B22",
+      "name": "Sicilian Defense: Alapin Variation",
+      "ply": 3
+    },
+    "moves": "e4 c5 c3 Nc6 d4 cxd4 cxd4 Nf6 d5 Nd4 Qxd4 d6 Bf4 g6 Nc3 Bg7 O-O-O O-O Bc4 a6 Na4 b5 Nb6 Nd7 Qd3 Nxb6 Bb3 Bb7 Nf3 Rc8+ Kb1 Nc4 Bxc4 bxc4 Qa3 Qb6 g3 c3 Ka1",
+    "pgn": "[Event \"Casual Game\"]\n[Site \"https://lichess.org\"]\n[Date \"1/12/2018, 9:52:47 PM\"]\n[Round \"-\"]\n[White \"White\"]\n[Black \"Black\"]\n[Result \"*\"]\n[GameId \"4pSpQGR7\"]\n[WhiteElo \"?\"]\n[BlackElo \"?\"]\n[Variant \"Standard\"]\n[TimeControl \"-\"]\n[ECO \"B22\"]\n[Opening \"Sicilian Defense: Alapin Variation\"]\n[Termination \"Unterminated\"]\n\n1. e4 c5 2. c3 Nc6 3. d4 cxd4 4. cxd4 Nf6 5. d5 Nd4 6. Qxd4 d6 7. Bf4 g6 8. Nc3 Bg7 9. O-O-O O-O 10. Bc4 a6 11. Na4 b5 12. Nb6 Nd7 13. Qd3 Nxb6 14. Bb3 Bb7 15. Nf3 Rc8+ 16. Kb1 Nc4 17. Bxc4 bxc4 18. Qa3 Qb6 19. g3 c3 20. Ka1 *\n\n\n",
+    "division": {
+      "middle": 22
+    },
+    "import": {
+      "date": "1/12/2018, 9:52:47 PM"
+    }
+  }
+}

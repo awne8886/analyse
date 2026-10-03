@@ -1,0 +1,7 @@
+{
+  "url": "https://api.chess.com/pub/player/hikaru/games/archives",
+  "status": 403,
+  "contentType": "text/plain",
+  "acao": "*",
+  "body": "Blocked: Archive crawl was too heavy for this API."
+}

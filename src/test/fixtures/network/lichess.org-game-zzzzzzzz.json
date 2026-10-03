@@ -1,0 +1,9 @@
+{
+  "url": "https://lichess.org/game/export/zzzzzzzz?pgnInJson=true&clocks=true&evals=false&opening=true&accuracy=true",
+  "status": 404,
+  "contentType": "application/json",
+  "acao": null,
+  "body": {
+    "error": "Not found"
+  }
+}

@@ -1,0 +1,12 @@
+public/
+src/data/openings.json
+src/test/fixtures/network/
+src/test/fixtures/evals/
+e2e/screenshots/
+dist/
+dist-pages/
+coverage/
+playwright-report/
+test-results/
+package-lock.json
+*.md

@@ -1,0 +1,40 @@
+{
+  "url": "https://lichess.org/game/export/AbCd1234",
+  "status": 200,
+  "contentType": "application/json",
+  "acao": "*",
+  "body": {
+    "id": "AbCd1234",
+    "rated": false,
+    "variant": "standard",
+    "speed": "blitz",
+    "perf": "blitz",
+    "createdAt": 1767268800000,
+    "lastMoveAt": 1767268800000,
+    "status": "aborted",
+    "source": "lobby",
+    "players": {
+      "white": {
+        "user": {
+          "name": "handmade_white",
+          "id": "handmade_white"
+        },
+        "rating": 1500
+      },
+      "black": {
+        "user": {
+          "name": "handmade_black",
+          "id": "handmade_black"
+        },
+        "rating": 1500
+      }
+    },
+    "moves": "",
+    "pgn": "[Event \"Rated Blitz game\"]\n[Site \"https://lichess.org/AbCd1234\"]\n[White \"handmade_white\"]\n[Black \"handmade_black\"]\n[Result \"*\"]\n\n*\n",
+    "clock": {
+      "initial": 300,
+      "increment": 0,
+      "totalTime": 300
+    }
+  }
+}

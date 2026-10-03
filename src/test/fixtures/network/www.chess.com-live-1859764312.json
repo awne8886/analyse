@@ -1,0 +1,9 @@
+{
+  "url": "https://www.chess.com/callback/live/game/1859764312",
+  "status": 404,
+  "contentType": "application/json",
+  "acao": null,
+  "body": {
+    "message": "Game is not found."
+  }
+}

@@ -1,0 +1,9 @@
+[Event "Handmade illegal move"]
+[Site "?"]
+[Date "2026.01.01"]
+[Round "-"]
+[White "Alice"]
+[Black "Bob"]
+[Result "1-0"]
+
+1. e4 e5 2. Nf6 Nc6 3. Bb5 a6 1-0
