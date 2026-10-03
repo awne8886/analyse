@@ -113,7 +113,8 @@ async function importChesscom(
       const live = await lookupViaProxy('live', id, proxyUrl, w)
       if (live.status !== 'failed') {
         const daily = await lookupViaProxy('daily', id, proxyUrl, w)
-        if (daily.status !== 'failed') return resolveBareLink(id, live, daily, w)
+        // A found live game stands when the daily probe fails: that kind is unknown, not a second match (I-10a).
+        if (daily.status !== 'failed' || live.status === 'found') return resolveBareLink(id, live, daily, w)
         failure = daily.reason
       } else {
         failure = live.reason

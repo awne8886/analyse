@@ -78,6 +78,7 @@ Build of "Analyse" per PROMPT.md. Current phase: **4 (review)**.
 26. **Phase 3 integration fixes (lead):** `data-complete` on the review root is true only once the finished review is persisted (`phase === 'complete'`), so a reload right after completion never re-analyses (DoD 9 race); the engine status line (G.7) is also shown above the review (`src/ui/EngineStatus.tsx`), so the badge stays visible while analysing; `e2e/review.spec.ts` waits for the piece to land on its square before a Retry drag (the board animates back one ply) and selects only numeric `move-<ply>` test ids (the UI also has `move-by-move`).
 27. **No download-progress port on WebKit (lead fix from CI evidence):** in WebKit 26.6 the app's lite-single engine stuck at "Engine: loading 100%" for 60 s and never became ready, while the plain worker of `e2e/engine-smoke.spec.ts` (no progress handshake) works. With the progress port the loader streams the `.wasm` through a synthetic `Response`; the pool now requests progress only off WebKit (`src/engine/pool.ts`), so WebKit shows "Engine: loading" without a percent (C.1 item 9 is optional).
 28. **WebKit needs a third document on the Pages first visit (deviation from risk 4's "at most 2 navigations", recorded for the user):** CI diagnostics on WebKit 26.6: document 1 `{isolated:false, controlled:false}`, document 2 `{isolated:false, controlled:true}`, document 3 `{isolated:true, controlled:true}`. WebKit does not isolate the controlled document reloaded from the non-isolated first visit; the vendored script's `coepdegrade` reload then isolates it. `e2e/pages-coi.spec.ts` keeps "at most 2" for Chromium and allows 3 for WebKit; every other assertion (isolated, controlled, scope, URL preserved) is unchanged. D.8's "WebKit 170 to 195 ms, reloads once" did not reproduce here.
+29. **Muted text colour (a11y M2 / parity GAP-2):** section 3.6 lists dark-theme text `#e8e6e3` and `#8b8987`, but `#8b8987` is 4.40:1 on the `#262522` panels, below the 4.5:1 body-text rule of G.28. Muted body text uses `#BEBDB9` (same section 3.6 grey scale); `#8b8987` stays for non-text chrome.
 
 ## Spec-gap resolutions (from docs/research/spec-gaps.md; binding for Phase 2)
 
@@ -89,7 +90,28 @@ All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as writt
 
 ## Review triage
 
-(Phase 4)
+Phase 4 reports: docs/review/correctness.md (3 high, 2 medium, 10 low), a11y.md (2 high, 6 medium, 4 low), performance.md (2 high, 4 medium, 3 low), parity.md (1 high, 1 medium, 3 low).
+
+| Finding | Decision |
+|---|---|
+| correctness H1 = performance H1 (Retry job ids make later analyses stale) | fixed now by the lead (cf64085: one job-id sequence in src/analysis, regression test) |
+| correctness L10 (bare link: live found + daily failed drops the live game) | fixed now by the lead (src/import/importGame.ts + src/import/bareLink.test.ts) |
+| correctness H2, H3, M1, M2 (unproven material/tactic claims, shown line vs counted line), L1 (second mover negation in facts.ts), L5, L6, L7, L8, L9 | fix now: `fix-explain` |
+| correctness L2 (stored explanation built before ply k+1 exists, no playedPv) | fix now: `fix-ui` (re-explain plies whose successor arrived; the UI renders explanations from the full review) |
+| correctness L3 (record-evals builds its own key) | fix now (lead): a unit test asserts the script's key format equals `evalKey` |
+| correctness L4 (cancel during newGame still searches) | fix now: `fix-engine` |
+| performance H2 (respawn failure leaves an empty pool; E-2 Retry reuses it and hangs) | fix now: `fix-engine` (pool fails pending jobs and reports E-2) + `fix-ui` (E-2 Retry disposes and recreates the pool) |
+| performance M2 (`ucinewgame` once per page, not per game) | fix now: `fix-engine` |
+| performance M3 (engine boots for a complete stored review of an accepted in-progress game) | fix now: `fix-ui` |
+| performance L1 (phones: "refining" text rarely shown), L2 (Pages hard reload: app usable 2 s then reloads), L3 (IndexedDB failure shown as E-2) | fix now: `fix-ui` |
+| performance M1 (mock engine resolves the whole analysis in one task) | rejected: mock-only; the real pool resolves each position from a worker message, so the browser paints between plies; the mock stays timer-free per docs/notes/contracts.md |
+| performance M4 (no e2e for reload mid-analysis resume) | Phase 5 `test-writer` |
+| a11y H1 = parity GAP-1 (import form and settings panel overflow at 360-430 px, masked by overflow-x hidden) | fix now: `fix-ui`, and the R30 e2e also asserts no element extends past the viewport (lead) |
+| a11y H2, M1, L3, L4 (classification-coloured and chip text below 4.5:1) | fix now: `fix-ui` (text uses an accessible darker/lighter shade of each class colour; icons and tints keep the section 3.6 values) |
+| a11y M2 = parity GAP-2 (dark muted text #8b8987 is 4.40:1) | fix now: `fix-ui`; muted body text uses #BEBDB9 from the same section 3.6 grey scale (deviation recorded as Assumption 29) |
+| a11y M3, M4, M5, M6, L1, L2 (graph keyboard, board tab stops, keyboard Retry, phase-grade labels, persistent status region, focus on screen change) | fix now: `fix-ui` |
+| parity GAP-3 (username colour during confirmation; stale "from username"), GAP-4 (opening line shows the final book name at every book ply) | fix now: `fix-ui` |
+| parity GAP-5 (R28 grep wording) | follow-up: documented in README (docs-deploy): the grep's matches are the avatar path and test-only lines |
 
 ## Subagents
 
