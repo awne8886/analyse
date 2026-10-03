@@ -363,17 +363,48 @@ test.describe('mock engine', () => {
 
     test('R30: no horizontal scroll at 360 px on any screen', async ({ page }) => {
       const scrollWidth = () => page.evaluate(() => document.documentElement.scrollWidth)
+      // scrollWidth alone missed content clipped by the page-level overflow rules (review a11y H1): also require that
+      // no visible element extends past the viewport, except inside a component's own scroll container.
+      const widest = () =>
+        page.evaluate(() => {
+          const pageLevel = new Set([
+            document.documentElement,
+            document.body,
+            document.getElementById('root'),
+          ])
+          const clippedByComponent = (el: Element) => {
+            for (let a = el.parentElement; a; a = a.parentElement) {
+              if (pageLevel.has(a) || a.classList.contains('app') || a.tagName === 'MAIN') continue
+              if (getComputedStyle(a).overflowX !== 'visible') return true
+            }
+            return false
+          }
+          let max = 0
+          for (const el of document.querySelectorAll('body *')) {
+            const r = el.getBoundingClientRect()
+            if (r.width === 0 || r.height === 0 || clippedByComponent(el)) continue
+            max = Math.max(max, r.right)
+          }
+          return Math.round(max)
+        })
       await page.goto('/')
       await expect(page.getByTestId('import-input')).toBeVisible()
       expect(await scrollWidth()).toBeLessThanOrEqual(360)
+      expect(await widest()).toBeLessThanOrEqual(360)
+      await page.getByTestId('settings').click()
+      await expect(page.getByTestId('settings-panel')).toBeVisible()
+      expect(await widest()).toBeLessThanOrEqual(360)
+      await page.getByTestId('settings').click()
       await page.getByTestId('import-input').fill(LIVE)
       await page.getByTestId('import-submit').click()
       await waitForCompleteReview(page)
       await expect(page.getByTestId('overview')).toBeVisible()
       expect(await scrollWidth()).toBeLessThanOrEqual(360)
+      expect(await widest()).toBeLessThanOrEqual(360)
       await page.getByTestId('start-review').click()
       await expect(page.getByTestId('board')).toBeVisible()
       expect(await scrollWidth()).toBeLessThanOrEqual(360)
+      expect(await widest()).toBeLessThanOrEqual(360)
     })
   })
 

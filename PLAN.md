@@ -1,6 +1,6 @@
 # PLAN
 
-Build of "Analyse" per PROMPT.md. Current phase: **4 (review)**.
+Build of "Analyse" per PROMPT.md. Current phase: **5 (final gates)**.
 
 ## Requirements checklist (R1 to R34)
 
@@ -45,7 +45,7 @@ Build of "Analyse" per PROMPT.md. Current phase: **4 (review)**.
 - [x] Gate 1 (vendor + scouts)
 - [x] Gate 2 (per agent): all six branches reported lint/format/typecheck/owned tests green (impl-import 3 test-literal failures fixed by the lead, Assumption 22)
 - [x] Gate 3 (integration): 1014 unit tests, 13/13 Chromium e2e; WebKit CI-only
-- [ ] Gate 4 (review)
+- [x] Gate 4 (review): four reports in docs/review/, every finding fixed with a test or triaged with a reason (Review triage)
 - [ ] Final gates (5.2)
 
 ## Assumptions
@@ -79,12 +79,22 @@ Build of "Analyse" per PROMPT.md. Current phase: **4 (review)**.
 27. **No download-progress port on WebKit (lead fix from CI evidence):** in WebKit 26.6 the app's lite-single engine stuck at "Engine: loading 100%" for 60 s and never became ready, while the plain worker of `e2e/engine-smoke.spec.ts` (no progress handshake) works. With the progress port the loader streams the `.wasm` through a synthetic `Response`; the pool now requests progress only off WebKit (`src/engine/pool.ts`), so WebKit shows "Engine: loading" without a percent (C.1 item 9 is optional).
 28. **WebKit needs a third document on the Pages first visit (deviation from risk 4's "at most 2 navigations", recorded for the user):** CI diagnostics on WebKit 26.6: document 1 `{isolated:false, controlled:false}`, document 2 `{isolated:false, controlled:true}`, document 3 `{isolated:true, controlled:true}`. WebKit does not isolate the controlled document reloaded from the non-isolated first visit; the vendored script's `coepdegrade` reload then isolates it. `e2e/pages-coi.spec.ts` keeps "at most 2" for Chromium and allows 3 for WebKit; every other assertion (isolated, controlled, scope, URL preserved) is unchanged. D.8's "WebKit 170 to 195 ms, reloads once" did not reproduce here.
 29. **Muted text colour (a11y M2 / parity GAP-2):** section 3.6 lists dark-theme text `#e8e6e3` and `#8b8987`, but `#8b8987` is 4.40:1 on the `#262522` panels, below the 4.5:1 body-text rule of G.28. Muted body text uses `#BEBDB9` (same section 3.6 grey scale); `#8b8987` stays for non-text chrome.
+30. **Accessible text shades (fix-ui):** classification-coloured TEXT uses `--color-classification-text-*`, each class colour mixed toward black (light theme) or white (dark theme) until it reaches at least 4.6:1 on its actual background (panels and the active move row); icons, square tints and arrows keep the exact section 3.6 values.
+31. **Username colour (fix-ui):** the colour resolved from the username is persisted as soon as the in-progress confirmation shows, even if the user then cancels.
+32. **Keyboard Retry (fix-ui, a11y M5):** besides drag-and-drop, Retry accepts a move typed as SAN or UCI in a field of the coach box (`retry-move-input`, `retry-move-submit`); the eval graph has a keyboard-operable slider (`eval-graph-keyboard`). New test ids only; none renamed.
+33. **Explanation proof windows (fix-explain):** the quoted `{pv}` window is exactly the counted window (including the quiet ply that settles an exchange, never padded to 3 plies; "exactly the counted window" beats E.6's 3-to-5); a window longer than 5 plies is not claimed; a tactic sentence needs mate or the capture of the motif's target piece inside the window (a discovered check needs the capture on the attacker's next move).
+34. **Hand-written facts (fix-explain):** facts without a board, or whose PV does not reproduce their own material figure, are judged on their numeric fields only (keeps the E.5 hand-written fixtures valid); `buildMoveFacts` never produces such facts. Material claims are not cross-checked against the eval change (follow-up).
+35. **Whole-game tests budget:** the integration and explain-snapshot tests replay full games and have a 30 s per-test timeout (CI under coverage measured 5.0 to 5.2 s against vitest's 5 s default).
 
 ## Spec-gap resolutions (from docs/research/spec-gaps.md; binding for Phase 2)
 
 All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as written: (1) preMistakeWin = 100 - previous.winBefore, gain = winBefore - preMistakeWin; (2) checkmate winAfter 100 loss 0, draw winAfter 50, DrawFromWinning final; (3) Great exclusions via E.1 isDefended / pieceValues / canBeTakenByLowerPiece; (4) customStart never Book, Forced before Book, EPD from chess.js fen(); (5) phaseStarts 0-based board index, Book/Forced = 100 and counted, not-analysed excluded; (6) ACPL definition; the fallback value is the literal R21 `3100 * exp(-0.01 * ACPL)` (unrounded, unclamped in data; the UI shows it rounded to the nearest 50 with "rough estimate"), amended after the fixtures-analysis tests pinned the literal formula; (7) one rating.method: regression > acpl > none; (8) Miss (a) before (b); (9) Brilliant needs loss <= 2, Great independent; (10) Retry uses line scores via the single mover-POV rule, Book off in Retry.
 
 ## Follow-ups
+
+- Cross-check explanation material claims against the eval change (fix-explain Assumption 34).
+- Lazy-load `src/data/openings.json` (63 kB gzipped of the 230 kB bundle; review-performance optional).
+- Engine respawn whose worker answers `uciok` but never `readyok` reaches E-2 only after the 120 s wait (fix-engine note).
 
 - A.5 live-id month prediction can miss games whose ids are out of time order (oddschess/variant ids seen in tohayes 2026/09); consider widening the scan or keying anchors per game type.
 
@@ -96,22 +106,22 @@ Phase 4 reports: docs/review/correctness.md (3 high, 2 medium, 10 low), a11y.md 
 |---|---|
 | correctness H1 = performance H1 (Retry job ids make later analyses stale) | fixed now by the lead (cf64085: one job-id sequence in src/analysis, regression test) |
 | correctness L10 (bare link: live found + daily failed drops the live game) | fixed now by the lead (src/import/importGame.ts + src/import/bareLink.test.ts) |
-| correctness H2, H3, M1, M2 (unproven material/tactic claims, shown line vs counted line), L1 (second mover negation in facts.ts), L5, L6, L7, L8, L9 | fix now: `fix-explain` |
-| correctness L2 (stored explanation built before ply k+1 exists, no playedPv) | fix now: `fix-ui` (re-explain plies whose successor arrived; the UI renders explanations from the full review) |
+| correctness H2, H3, M1, M2 (unproven material/tactic claims, shown line vs counted line), L1 (second mover negation in facts.ts), L5, L6, L7, L8, L9 | fixed: `fix-explain` (src/explain/proofs.test.ts, 20 tests; snapshot re-recorded, 47 lines checked) |
+| correctness L2 (stored explanation built before ply k+1 exists, no playedPv) | fixed: `fix-ui` |
 | correctness L3 (record-evals builds its own key) | fixed (lead): src/test/integration/evalKeys.test.ts asserts every recorded key equals `evalKey(fen, limits)` |
-| correctness L4 (cancel during newGame still searches) | fix now: `fix-engine` |
-| performance H2 (respawn failure leaves an empty pool; E-2 Retry reuses it and hangs) | fix now: `fix-engine` (pool fails pending jobs and reports E-2) + `fix-ui` (E-2 Retry disposes and recreates the pool) |
-| performance M2 (`ucinewgame` once per page, not per game) | fix now: `fix-engine` |
-| performance M3 (engine boots for a complete stored review of an accepted in-progress game) | fix now: `fix-ui` |
-| performance L1 (phones: "refining" text rarely shown), L2 (Pages hard reload: app usable 2 s then reloads), L3 (IndexedDB failure shown as E-2) | fix now: `fix-ui` |
+| correctness L4 (cancel during newGame still searches) | fixed: `fix-engine` |
+| performance H2 (respawn failure leaves an empty pool; E-2 Retry reuses it and hangs) | fixed: `fix-engine` (pool fails pending jobs, reports E-2, next init reboots) + `fix-ui` (E-2 Retry re-inits and restarts the analysis) |
+| performance M2 (`ucinewgame` once per page, not per game) | fixed: `fix-engine` + `fix-ui` (init per analysis) |
+| performance M3 (engine boots for a complete stored review of an accepted in-progress game) | fixed: `fix-ui` |
+| performance L1 (phones: "refining" text rarely shown), L2 (Pages hard reload: app usable 2 s then reloads), L3 (IndexedDB failure shown as E-2) | fixed: `fix-ui` |
 | performance M1 (mock engine resolves the whole analysis in one task) | rejected: mock-only; the real pool resolves each position from a worker message, so the browser paints between plies; the mock stays timer-free per docs/notes/contracts.md |
 | performance M4 (no e2e for reload mid-analysis resume) | fixed: e2e/resume.spec.ts (test-writer) |
-| a11y H1 = parity GAP-1 (import form and settings panel overflow at 360-430 px, masked by overflow-x hidden) | fix now: `fix-ui`, and the R30 e2e also asserts no element extends past the viewport (lead) |
-| a11y H2, M1, L3, L4 (classification-coloured and chip text below 4.5:1) | fix now: `fix-ui` (text uses an accessible darker/lighter shade of each class colour; icons and tints keep the section 3.6 values) |
-| a11y M2 = parity GAP-2 (dark muted text #8b8987 is 4.40:1) | fix now: `fix-ui`; muted body text uses #BEBDB9 from the same section 3.6 grey scale (deviation recorded as Assumption 29) |
-| a11y M3, M4, M5, M6, L1, L2 (graph keyboard, board tab stops, keyboard Retry, phase-grade labels, persistent status region, focus on screen change) | fix now: `fix-ui` |
-| parity GAP-3 (username colour during confirmation; stale "from username"), GAP-4 (opening line shows the final book name at every book ply) | fix now: `fix-ui` |
-| parity GAP-5 (R28 grep wording) | follow-up: documented in README (docs-deploy): the grep's matches are the avatar path and test-only lines |
+| a11y H1 = parity GAP-1 (import form and settings panel overflow at 360-430 px, masked by overflow-x hidden) | fixed: `fix-ui`; the R30 e2e now also asserts no visible element extends past 360 px (lead; it fails with 520 px on the pre-fix build 0c232f5) |
+| a11y H2, M1, L3, L4 (classification-coloured and chip text below 4.5:1) | fixed: `fix-ui` (src/ui/contrast.test.ts computes the ratios) |
+| a11y M2 = parity GAP-2 (dark muted text #8b8987 is 4.40:1) | fixed: `fix-ui`; muted body text uses #BEBDB9 (Assumption 29) |
+| a11y M3, M4, M5, M6, L1, L2 (graph keyboard, board tab stops, keyboard Retry, phase-grade labels, persistent status region, focus on screen change) | fixed: `fix-ui` (src/ui/a11y.test.tsx) |
+| parity GAP-3 (username colour during confirmation; stale "from username"), GAP-4 (opening line shows the final book name at every book ply) | fixed: `fix-ui` |
+| parity GAP-5 (R28 grep wording) | documented in README Known limitations (docs-deploy): the grep matches only two test-only lines; no chess.com asset reaches the build |
 
 ## Subagents
 
@@ -137,8 +147,8 @@ Phase 4 reports: docs/review/correctness.md (3 high, 2 medium, 10 low), a11y.md 
 | review-a11y | 4 | general-purpose (inherit) | main checkout (docs/review/a11y.md) | running |
 | review-performance-mobile | 4 | general-purpose (inherit) | main checkout (docs/review/performance.md) | done |
 | review-parity | 4 | general-purpose (inherit) | main checkout (docs/review/parity.md) | done |
-| fix-ui | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
-| fix-explain | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
+| fix-ui | 4 | general-purpose (inherit) | worktree-agent-a5e0e3b8ebb0ce59a @ a7bca5b | merged |
+| fix-explain | 4 | general-purpose (inherit) | worktree-agent-a149b6032365d6b5a @ 6fa97e6 | merged |
 | fix-engine | 4 | general-purpose (inherit) | worktree-agent-ab35510334f183132 @ 01f5087 | merged |
 | docs-deploy | 5 | general-purpose (sonnet) | worktree-agent-a15b025b9dec89407 @ 7ded9ab | merged |
 | test-writer | 5 | general-purpose (sonnet) | worktree-agent-ada1676df72671aad @ 2497331 | merged |
