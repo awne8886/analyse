@@ -105,7 +105,7 @@ Phase 4 reports: docs/review/correctness.md (3 high, 2 medium, 10 low), a11y.md 
 | performance M3 (engine boots for a complete stored review of an accepted in-progress game) | fix now: `fix-ui` |
 | performance L1 (phones: "refining" text rarely shown), L2 (Pages hard reload: app usable 2 s then reloads), L3 (IndexedDB failure shown as E-2) | fix now: `fix-ui` |
 | performance M1 (mock engine resolves the whole analysis in one task) | rejected: mock-only; the real pool resolves each position from a worker message, so the browser paints between plies; the mock stays timer-free per docs/notes/contracts.md |
-| performance M4 (no e2e for reload mid-analysis resume) | Phase 5 `test-writer` |
+| performance M4 (no e2e for reload mid-analysis resume) | fixed: e2e/resume.spec.ts (test-writer) |
 | a11y H1 = parity GAP-1 (import form and settings panel overflow at 360-430 px, masked by overflow-x hidden) | fix now: `fix-ui`, and the R30 e2e also asserts no element extends past the viewport (lead) |
 | a11y H2, M1, L3, L4 (classification-coloured and chip text below 4.5:1) | fix now: `fix-ui` (text uses an accessible darker/lighter shade of each class colour; icons and tints keep the section 3.6 values) |
 | a11y M2 = parity GAP-2 (dark muted text #8b8987 is 4.40:1) | fix now: `fix-ui`; muted body text uses #BEBDB9 from the same section 3.6 grey scale (deviation recorded as Assumption 29) |
@@ -141,4 +141,4 @@ Phase 4 reports: docs/review/correctness.md (3 high, 2 medium, 10 low), a11y.md 
 | fix-explain | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
 | fix-engine | 4 | general-purpose (inherit) | worktree-agent-ab35510334f183132 @ 01f5087 | merged |
 | docs-deploy | 5 | general-purpose (sonnet) | worktree-agent-a15b025b9dec89407 @ 7ded9ab | merged |
-| test-writer | 5 | general-purpose (sonnet) | worktree (from e1a5313) | running |
+| test-writer | 5 | general-purpose (sonnet) | worktree-agent-ada1676df72671aad @ 2497331 | merged |
