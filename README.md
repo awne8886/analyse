@@ -10,7 +10,7 @@ It is a static site (Vite, React, TypeScript) with one small serverless function
 2. Copy the address from the browser bar. It contains `/game/live/`, `/game/daily/` or `/game/computer/`.
 3. Paste it into the box and press **Analyse**.
 
-Lichess links (`lichess.org/AbCd1234`) and a pasted or dropped PGN work too. On the GitHub Pages build a chess.com link also needs the chess.com username of either player (the static host has no proxy, so the game is found in that player's public archive). The first visit to the GitHub Pages build reloads the page once to enable multi-core analysis.
+Lichess links (`lichess.org/AbCd1234`) and a pasted or dropped PGN work too. On the GitHub Pages build a chess.com link also needs the chess.com username of either player (the static host has no proxy, so the game is found in that player's public archive). The first visit to the GitHub Pages build reloads the page to enable multi-core analysis (once in Chromium and Firefox, twice in Safari and other WebKit browsers; your game address is kept).
 
 Reviews are kept in your browser (IndexedDB), so reopening a reviewed game is instant. Share links have the form `?game=cc:live:<id>&ply=<n>`.
 
@@ -36,7 +36,7 @@ Requires Node 24.
 npm ci
 npm run dev            # http://localhost:5173
 npm test               # unit tests (vitest)
-npx playwright test    # e2e tests (Chromium and WebKit; mock engine, network mocked)
+npx playwright test    # e2e tests (Chromium and WebKit; mock engine, network blocked)
 npm run build          # Vercel build -> dist/
 npm run build:pages    # GitHub Pages build -> dist-pages/ (base /analyse/)
 npm run lint && npm run format && npm run typecheck
@@ -51,7 +51,7 @@ The Stockfish 19 lite builds (stockfish.js v19.0.0) are committed under `public/
 ```sh
 npm install --no-save stockfish@19.0.0   # optional; otherwise the GitHub release assets are downloaded
 node scripts/vendor-engine.mjs           # copies the four engine files and Copying.txt
-node scripts/vendor-engine.mjs --check   # verifies the exact byte sizes; prints OK
+node scripts/vendor-engine.mjs --check   # verifies the exact byte sizes; prints OK (the engine update step ends here)
 ```
 
 ### Mock-engine eval tables
@@ -60,17 +60,20 @@ The e2e suite answers engine requests from recorded tables in `src/test/fixtures
 
 ## Terms
 
-Chess.com terms, as read on 2026-10-02: the Published-Data API is public read-only data with documented etiquette (serial requests, identifiable User-Agent where possible, no harvesting or offline storage, and a clause that API data may not be used to create or augment a competing service); the User Agreement forbids data mining or robots on user-generated content except as expressly permitted and reserves all Content (images, fonts, sounds, UI). The callback endpoints are undocumented; proxying them is common in community tools but is not covered by the published API terms (unverified). This build therefore: fetches one game per user action, stores game data only in that user's own browser (IndexedDB) plus the function's 24 hour CDN cache, never bulk-downloads, hot-links avatars only as `<img>`, ships no chess.com Content, and keeps the username/public-API and PGN paths as first-class alternatives.
+Chess.com terms, as read on 2026-10-02: the Published-Data API is public read-only data with documented etiquette (serial requests, identifiable User-Agent where possible, no harvesting or offline storage, and a clause that API data may not be used to create or augment a competing service); the User Agreement forbids data mining or robots on user-generated content except as expressly permitted and reserves all Content (images, fonts, sounds, UI). The callback endpoints are undocumented; proxying them is common in community tools but is not covered by the published API terms (unverified, see PROMPT.md Appendix I). This build therefore: fetches one game per user action, stores game data only in that user's own browser (IndexedDB) plus the function's 24 hour CDN cache, never bulk-downloads, hot-links avatars only as `<img>`, ships no chess.com Content, and keeps the username/public-API and PGN paths as first-class alternatives.
 
 Not affiliated with Chess.com. Chess.com is a trademark of Chess.com, LLC.
 
 ## Known limitations
 
-- **iOS 26.** Whether the single-threaded engine triggers WebKit bug 304810 (memory spikes that can make iOS reload the tab) on iOS 26.2 to 26.6 is unknown. Manual check: open a 40-move game on an iPhone running iOS 26.2 or newer and confirm the tab is not reloaded during analysis. If it is, the analysis resumes from where it stopped in fast mode. Keep the tab in the foreground while analysing on a phone.
-- **Chess.com proxy.** Link import on Vercel goes through a small function that calls chess.com's undocumented callback endpoints. Chess.com's firewall may start blocking the host at any time (it has blocked whole hosting providers before). The app then asks for a player's username and uses the public API, or you can paste the PGN (chess.com: Share > PGN).
+- **iOS 26 (WebKit bug 304810).** Whether the single-threaded engine triggers WebKit bug 304810 (Asyncify compile memory spikes on iOS 26.2 to 26.6 that can make iOS kill and reload the tab) is unknown; nobody has reported it either way. Manual check: open a 40-move game on an iPhone running iOS 26.2 or newer and confirm the tab is not reloaded during analysis (the full checklist is in [DEPLOY.md](DEPLOY.md)). If it is reloaded, the analysis resumes from the move where it stopped, in fast mode, with the message "Analysis was interrupted (your device ran out of memory). Resuming from move {n} in fast mode." Keep the tab in the foreground while analysing on a phone.
+- **Chess.com proxy.** Link import on Vercel goes through a small function that calls chess.com's undocumented callback endpoints. Both proxy paths worked from Vercel region `iad1` on 2026-10-02 (20 of 20 serial, 10 of 10 parallel requests), but whether chess.com's Cloudflare keeps accepting Vercel/AWS egress over time is unverified: it has blocked whole hosting providers before. If it stops, the app asks for a player's username and uses the public API, or you can paste the PGN (chess.com: Share > PGN). Those two paths are first-class, not stubs.
 - **Bot games** are not in chess.com's public archive: on GitHub Pages paste their PGN.
 - **Variants.** Chess960, bughouse, crazyhouse and other variants are not supported. Games from a custom position (odds games, lichess "From Position") are analysed without opening-book labels.
-- **Pieces.** The default Kaneo piece set (CC BY 4.0) is described by its author as inspired by chess.com's pieces. The residual look-alike risk is believed low, but no legal opinion was obtained. To switch the default to cburnett, change `defaultPieceSet` in `src/state/settingsStore.ts`; users can also pick cburnett in settings.
+- **Pieces (Kaneo).** The default Kaneo piece set (CC BY 4.0) is described by its author as "inspired by the Neo pieces of chess.com". The residual look-alike (trade dress) risk is believed low, but no legal opinion was obtained. To switch the default to cburnett, change the `defaultPieceSet` constant in `src/state/settingsStore.ts` from `'kaneo'` to `'cburnett'`; users can also pick cburnett in settings. The set is never called "Neo" in the app.
+- **Download progress is not shown on WebKit.** On Safari and other WebKit browsers the engine shows "Engine: loading" without a percentage (the progress handshake stalled the engine in WebKit 26.6, so it is only used elsewhere). The engine still loads.
+- **First visit on GitHub Pages.** The page reloads once (twice in WebKit) before analysis can start; see "How to use". A private-browsing mode without service workers skips the reload and runs single-core after 3 seconds.
+- **The no-chess.com-assets grep.** The check `grep -rn --exclude-dir=fixtures "chesscomfiles\|chess.com/bundles\|chessglyph\|ChessSans\|fonts.googleapis" src public index.html` does not print only the avatar code. The avatar `<img>` in `src/ui/PlayersRow.tsx` takes its address from the game data (so the file itself has no matching text, and it falls back to a bundled placeholder on error). The two matches are test-only lines: `src/ui/test-fixtures.ts` and `src/import/chesscomProxy.test.ts`, both fake avatar URLs. Nothing under `public/` or `index.html` matches, and no chess.com asset is fetched at runtime except the game JSON, the public API and player avatars.
 - **Accuracy and labels** approximate chess.com's (see above); "Deep" analysis is not calibrated.
 
 ## Licences
