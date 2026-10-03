@@ -1,43 +1,43 @@
 # PLAN
 
-Build of "Analyse" per PROMPT.md. Current phase: **5 (final gates)**.
+Build of "Analyse" per PROMPT.md. Current phase: **done (final report)**.
 
 ## Requirements checklist (R1 to R34)
 
-- [ ] R1 URL / PGN input forms (parseInput, A.4)
-- [ ] R2 kind selects one endpoint; bare-link live-then-daily rule
-- [ ] R3 Vercel import chain with degradation, content-type check, proxyDown memo
-- [ ] R4 TCN decoder verbatim + castling normalisation + plyCount cross-check
-- [ ] R5 start position from data; custom start disables Book, banner I-15
-- [ ] R6 supported / unsupported inputs, variant gate before engine
-- [ ] R7 "which colour am I" resolution, persisted
-- [ ] R8 lichess fetch, 429 retry, TypeError path
-- [ ] R9 public API serial, lowercase, 3 live months / 6 daily months
-- [ ] R10 engine files vendored, sizes checked, no stockfish dependency
-- [ ] R11 classic workers, build-output greps
-- [ ] R12 pthreads only isolated + non-WebKit; SIMD probe gate
-- [ ] R13 worker counts and Hash per device class
-- [ ] R14 combined go depth+movetime; profiles; calibration tiers
-- [ ] R15 MultiPV 2 desktop/tablet; phone re-search of candidates
-- [ ] R16 forwards analysis, progressive, cancellable, cached, IndexedDB resume, lazy pool, watchdog
-- [ ] R17 UCI protocol handling
-- [ ] R18 win% curve, mover POV
-- [ ] R19 classification per Appendix B (19 fixtures)
-- [ ] R20 accuracy formula + harmonic aggregation; lichess preset on dev page
-- [ ] R21 estimated game rating
-- [ ] R22 phases (Divider), phase grades
-- [ ] R23 key moments
-- [ ] R24 explanation engine (rules, proofs, seeded variants)
-- [ ] R25 headlines and voice
-- [ ] R26 Explain toggle and coach box buttons
-- [ ] R27 screens per Appendix G
-- [ ] R28 colours/icons/pieces/sounds/fonts; no chess.com runtime assets
-- [ ] R29 query-string navigation; ?game receiving cases
-- [ ] R30 360 px, keyboard, aria-current, role=status, badge aria-labels
-- [ ] R31 deploy files, COOP/COEP, coi SW on Pages only
-- [ ] R32 licensing, About panel
-- [ ] R33 unit + e2e tests
-- [ ] R34 lint/format/typecheck/test/build/build:pages green
+- [x] R1 URL / PGN input forms (parseInput, A.4)
+- [x] R2 kind selects one endpoint; bare-link live-then-daily rule
+- [x] R3 Vercel import chain with degradation, content-type check, proxyDown memo
+- [x] R4 TCN decoder verbatim + castling normalisation + plyCount cross-check
+- [x] R5 start position from data; custom start disables Book, banner I-15
+- [x] R6 supported / unsupported inputs, variant gate before engine
+- [x] R7 "which colour am I" resolution, persisted
+- [x] R8 lichess fetch, 429 retry, TypeError path
+- [x] R9 public API serial, lowercase, 3 live months / 6 daily months
+- [x] R10 engine files vendored, sizes checked, no stockfish dependency
+- [x] R11 classic workers, build-output greps
+- [x] R12 pthreads only isolated + non-WebKit; SIMD probe gate
+- [x] R13 worker counts and Hash per device class
+- [x] R14 combined go depth+movetime; profiles; calibration tiers
+- [x] R15 MultiPV 2 desktop/tablet; phone re-search of candidates
+- [x] R16 forwards analysis, progressive, cancellable, cached, IndexedDB resume, lazy pool, watchdog
+- [x] R17 UCI protocol handling
+- [x] R18 win% curve, mover POV
+- [x] R19 classification per Appendix B (19 fixtures)
+- [x] R20 accuracy formula + harmonic aggregation; lichess preset on dev page
+- [x] R21 estimated game rating
+- [x] R22 phases (Divider), phase grades
+- [x] R23 key moments
+- [x] R24 explanation engine (rules, proofs, seeded variants)
+- [x] R25 headlines and voice
+- [x] R26 Explain toggle and coach box buttons
+- [x] R27 screens per Appendix G
+- [x] R28 colours/icons/pieces/sounds/fonts; no chess.com runtime assets
+- [x] R29 query-string navigation; ?game receiving cases
+- [x] R30 360 px, keyboard, aria-current, role=status, badge aria-labels
+- [x] R31 deploy files, COOP/COEP, coi SW on Pages only
+- [x] R32 licensing, About panel
+- [x] R33 unit + e2e tests
+- [x] R34 lint/format/typecheck/test/build/build:pages green
 
 ## Gates
 
@@ -46,7 +46,7 @@ Build of "Analyse" per PROMPT.md. Current phase: **5 (final gates)**.
 - [x] Gate 2 (per agent): all six branches reported lint/format/typecheck/owned tests green (impl-import 3 test-literal failures fixed by the lead, Assumption 22)
 - [x] Gate 3 (integration): 1014 unit tests, 13/13 Chromium e2e; WebKit CI-only
 - [x] Gate 4 (review): four reports in docs/review/, every finding fixed with a test or triaged with a reason (Review triage)
-- [ ] Final gates (5.2)
+- [x] Final gates (5.2): all local commands exit 0 (PROGRESS.md 2026-10-03); WebKit e2e in CI; push to `main` not done by design (Assumption 1)
 
 ## Assumptions
 
@@ -91,6 +91,10 @@ Build of "Analyse" per PROMPT.md. Current phase: **5 (final gates)**.
 All 10 proposals of `docs/research/spec-gaps.md` section 3 are accepted as written: (1) preMistakeWin = 100 - previous.winBefore, gain = winBefore - preMistakeWin; (2) checkmate winAfter 100 loss 0, draw winAfter 50, DrawFromWinning final; (3) Great exclusions via E.1 isDefended / pieceValues / canBeTakenByLowerPiece; (4) customStart never Book, Forced before Book, EPD from chess.js fen(); (5) phaseStarts 0-based board index, Book/Forced = 100 and counted, not-analysed excluded; (6) ACPL definition; the fallback value is the literal R21 `3100 * exp(-0.01 * ACPL)` (unrounded, unclamped in data; the UI shows it rounded to the nearest 50 with "rough estimate"), amended after the fixtures-analysis tests pinned the literal formula; (7) one rating.method: regression > acpl > none; (8) Miss (a) before (b); (9) Brilliant needs loss <= 2, Great independent; (10) Retry uses line scores via the single mover-POV rule, Book off in Retry.
 
 ## Follow-ups
+
+- Phase 6 stretch goals not built: lichess cloud-eval prefill and BYOK "Ask AI" explanations (section 4.2 Phase 6).
+- chess.com variants-platform URLs (form unknown) are rejected as unrecognised (Appendix I).
+- Post-deploy checks of risks 1, 4 and 13 and the iPhone checklist (DEPLOY.md) need the first real deploy.
 
 - Cross-check explanation material claims against the eval change (fix-explain Assumption 34).
 - Lazy-load `src/data/openings.json` (63 kB gzipped of the 230 kB bundle; review-performance optional).

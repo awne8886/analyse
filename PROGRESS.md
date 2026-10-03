@@ -147,3 +147,108 @@ $ cat dist/assets/*.js | gzip -c | wc -c
 
 - Run 8 (https://github.com/awne8886/analyse/actions/runs/37080644235) on 3d9e663: conclusion **success** — `checks` (lint, format, typecheck, `npm test -- --coverage`, both builds and coi greps) and `e2e` (26 tests: Chromium 153 and WebKit 26.6, including engine-smoke and pages-coi in WebKit).
 - Earlier runs on the same PR failed and were fixed: Retry drag during the step-back animation (Chrome 153), WebKit engine stuck at "loading 100%" with the download-progress port (PLAN Assumption 27), WebKit Pages first visit needing a third document (PLAN Assumption 28; diagnostics `[{isolated:false,controlled:false},{isolated:false,controlled:true},{isolated:true,controlled:true}]`).
+
+## 2026-10-03 Final gates (section 5.2) on the integration branch
+
+```
+$ npm ci
+61 packages are looking for funding
+  run `npm fund` for details
+found 0 vulnerabilities
+exit 0
+$ npm run lint
+> analyse@1.0.0 lint
+> eslint .
+exit 0
+$ npm run format
+Checking formatting...
+All matched files use Prettier code style!
+exit 0
+$ npm run typecheck
+> analyse@1.0.0 typecheck
+> tsc -b
+exit 0
+$ npm test 2>&1 | grep -E 'Test Files|Tests |Errors'
+ Test Files  57 passed (57)
+      Tests  1150 passed (1150)
+exit 0
+$ npm run build
+dist/assets/index-Bft0LHdU.js                           1,002.50 kB │ gzip: 225.40 kB
+✓ built in 1.15s
+exit 0
+$ npm run build:pages
+dist-pages/assets/index-Bpz6KFBW.js                           1,002.81 kB │ gzip: 225.49 kB
+✓ built in 800ms
+exit 0
+$ PW_CHROMIUM_PATH=/opt/pw-browsers/chromium-1194/chrome-linux/chrome npx playwright test --project=chromium
+  ✓  15 [chromium] › e2e/review.spec.ts:455:3 › real engine › the engine boots on the first analysis; WebKit loads lite-single only (1.7s)
+  15 passed (51.6s)
+exit 0
+(WebKit project: CI only, see PLAN Assumption 5)
+$ test -f e2e/screenshots/review-desktop.png
+exit 0
+$ test -f e2e/screenshots/review-mobile.png
+exit 0
+$ node scripts/vendor-engine.mjs --check
+stockfish-19-lite-single.js: 21415 bytes
+stockfish-19-lite-single.wasm: 1787571 bytes
+stockfish-19-lite.js: 32817 bytes
+stockfish-19-lite.wasm: 1636291 bytes
+Copying.txt: 35821 bytes
+OK
+exit 0
+$ grep -q coepdegrade public/coi-serviceworker.min.js
+exit 0
+$ node -e "const y=require('js-yaml');for(const f of ['ci','pages'])y.load(require('fs').readFileSync('.github/workflows/'+f+'.yml','utf8'));console.log('yaml ok')"
+yaml ok
+exit 0
+```
+
+- `gh run list --workflow ci.yml --limit 1`: the `gh` CLI is not available for this in the session; the GitHub Actions runs are read through the GitHub API instead and recorded below after the final push.
+- `git push origin main`: not done by design. The session may push only `claude/chess-review-website-y8cb15` (PLAN Assumption 1); everything is on that branch and in draft PR awne8886/analyse#2 into `main`.
+- WebKit project: runs in CI only (PLAN Assumption 5).
+
+### Definition of done (section 5.3) mapping
+
+| Item | Evidence |
+|---|---|
+| 1 | e2e `DoD 1` (Chromium local, Chromium + WebKit CI); integration test `cc:live:129688175007 (DoD 1)` |
+| 2 | e2e `DoD 2`; integration test `cc:daily:1000337106 (DoD 2)` |
+| 3 | e2e `DoD 3` |
+| 4 | e2e `Pages build › DoD 4` |
+| 5 | e2e `DoD 5`; integration test `li:4S1PZUvW (DoD 5)` |
+| 6 | unit: 19 classification fixtures + B.6 accuracy (`src/analysis/classify.test.ts`, `accuracy.test.ts`), TCN, URL, UCI, detector and string-table tests (1150 unit tests green) |
+| 7 | e2e `DoD 7` |
+| 8 | e2e `DoD 8` |
+| 9 | e2e `DoD 9` (real engine, mock off: workersCreated 0, uciSent 0) |
+| 10 | `e2e/engine-smoke.spec.ts` and the WebKit `afterEach` request check in `e2e/review.spec.ts`, green in CI WebKit 26.6 |
+| 11 | `e2e/screenshots/review-desktop.png`, `review-mobile.png`; `e2e/pages-coi.spec.ts` green in Chromium and WebKit (CI); the no-service-worker 3 s fallback is manual (Appendix I) |
+| 12 | README.md, DEPLOY.md, CLAUDE.md, PLAN.md, PROGRESS.md, THIRD_PARTY_LICENSES.md, LICENSE present; Appendix I outcomes below; branch clean |
+
+### Appendix I outcomes
+
+| Item | Outcome |
+|---|---|
+| Vercel/AWS egress accepted by chess.com's Cloudflare over time | needs the first deploy: DEPLOY.md risk 1 curl checks (record there) |
+| Vercel serves `.wasm` as `application/wasm` | needs the first deploy: DEPLOY.md risk 4 curl |
+| Vercel echoes COOP/COEP on 304 | needs the first deploy: DEPLOY.md risk 13 ("Known host behaviours") |
+| Actions-published Pages serves `.wasm` as `application/wasm` | needs the first deploy: DEPLOY.md post-deploy curl |
+| `"framework": "vite"` slug | key omitted as specified; needs the first deploy (add only if auto-detection fails) |
+| lite-single wasm vs WebKit bug 304810 on iOS 26.2-26.6 | unknown; manual iPhone checklist in DEPLOY.md; auto-resume (E-3) covered by `e2e/resume.spec.ts` |
+| Real iPhone and Android nps | unmeasured; runtime calibration decides the tier |
+| `eslint-plugin-react-refresh` `configs.vite` | verified: exists (0.5.7), lint passes with it |
+| `openings.json` key count | verified: 3,815 rows, 3,815 keys |
+| chess.com variants platform URLs | unknown URL form; rejected as unrecognised by the parser; follow-up in PLAN |
+| TCN drop-character mapping | not needed: any drop ply is rejected (I-13), tested |
+| Lichess `Retry-After` on 429 | none observed (no 429 provoked on 2026-10-02); fixed 60 s wait implemented and unit-tested |
+| Private browsing without `navigator.serviceWorker` | untestable in Playwright; the 3 s fallback is implemented (src/main.tsx, unit-tested via src/ui/main.test.ts); manual check in a private window |
+| Safari background-tab throttling on iOS | likely; E-8b hint shown on phones; manual iPhone checklist |
+| `ffmpeg` availability | verified: present; 9 mp3 files transcoded |
+| Network for the Phase 1 probes | verified: 43 endpoints recorded on the first try (f3mYca1i had finished; frozen in-progress copy derived) |
+| Callback endpoints through a proxy vs the API terms | unverified (not covered by the published terms); README "Terms" paragraph and PLAN Assumption 11 |
+| `anthropic-dangerous-direct-browser-access` header | unverified: Phase 6 ("Ask AI") not built |
+| Kaneo trade-dress exposure | no legal opinion; README Known limitations and the `defaultPieceSet` switch |
+| `.claude/settings.json` honoured for worktree spawns | verified: every worktree agent started at the lead's HEAD |
+| `"type": "module"` and the dev-dependency row of 3.1 | verified at Gate 0 (lint, typecheck, build, vitest) |
+
+Found during the build and recorded (not in Appendix I): WebKit 26.6 needs a third document on the Pages first visit (PLAN Assumption 28); WebKit stalls with the loader's download-progress port (Assumption 27).
