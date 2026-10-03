@@ -4,6 +4,7 @@
 // Scores leave this file in White's perspective (toWhite, exactly once, here).
 import { REVIEW_CONFIG } from '../analysis'
 import type { EngineApi, EngineProfile, PositionEval, SearchLimits } from '../types/engine'
+import { deviceProfile } from './deviceProfile'
 import { Engine, toWhite, type AnalysisResult, type EngineCounters } from './Engine'
 
 export type EngineStatus =
@@ -118,8 +119,11 @@ class Pool implements EnginePool {
   }
 
   private spawn(profile: EngineProfile, withProgress: boolean): Promise<Engine> {
+    // No download-progress port on WebKit: with it the loader streams the .wasm through a synthetic Response, and
+    // WebKit stalled after 100% in CI (the engine never became ready; PLAN.md Assumption 27). The percent is optional
+    // (C.1 item 9); WebKit shows "Engine: loading" until the badge.
     const onDownloadProgress =
-      withProgress && this.hasStatusListener
+      withProgress && this.hasStatusListener && !isWebKitBrowser()
         ? (percent: number) => this.onStatus({ phase: 'loading', percent })
         : undefined
     return Engine.create(Engine.variantOrder(profile.build), {
@@ -430,4 +434,8 @@ class Pool implements EnginePool {
 
 export function createRealEnginePool(profile: EngineProfile, opts: EnginePoolOptions = {}): EnginePool {
   return new Pool(profile, opts)
+}
+
+function isWebKitBrowser(): boolean {
+  return typeof navigator !== 'undefined' && deviceProfile({ simd: true })?.isWebKit === true
 }

@@ -318,9 +318,13 @@ test.describe('mock engine', () => {
       [ok!, ok!.second, 'OK'],
       [incorrect!, incorrect!.second, 'Incorrect'],
     ] as const) {
+      // A graded attempt stays in Retry mode (the button then reads "Exit retry"): leave it before the next one.
+      if ((await page.getByTestId('retry').getAttribute('aria-pressed')) === 'true')
+        await page.getByTestId('retry').click()
       await page.getByTestId(`move-${c.ply}`).click()
       await expect(page.getByTestId(`move-${c.ply}`)).toHaveAttribute('aria-current', 'true')
       await page.getByTestId('retry').click()
+      await expect(page.getByTestId('retry')).toHaveAttribute('aria-pressed', 'true')
       await dragMove(page, uci)
       await expect(page.getByTestId('retry-feedback'), `ply ${c.ply} ${uci}`).toContainText(feedback)
     }

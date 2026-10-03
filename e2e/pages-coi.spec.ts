@@ -64,10 +64,15 @@ test('the Pages build isolates through the coi service worker and keeps the URL'
   const state = await snapshot()
   expect(state.documents).toBeGreaterThanOrEqual(1)
   const docLog = await page.evaluate(() => sessionStorage.getItem('__e2eDocLog'))
+  // Chromium: at most one reload (risk 4). WebKit 26.6 (CI, 2026-10-03) does not isolate the document reloaded from
+  // the non-isolated first visit even though the coi worker controls it ([{isolated:false,controlled:false},
+  // {isolated:false,controlled:true},{isolated:true,controlled:true}]); the vendored script's coepdegrade reload
+  // then isolates it, so WebKit needs exactly one more document (PLAN.md Assumption 28).
+  const maxDocuments = test.info().project.name === 'webkit' ? 3 : 2
   expect(
     state.documents,
     `documents: ${docLog}\nconsole: ${JSON.stringify(consoleLines)}`,
-  ).toBeLessThanOrEqual(2)
+  ).toBeLessThanOrEqual(maxDocuments)
   expect(state.isolated).toBe(true)
   expect(state.scope).toMatch(/\/analyse\/$/)
   expect(state.controlled).toBe(true)
