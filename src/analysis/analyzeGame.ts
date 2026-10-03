@@ -36,6 +36,11 @@ const SIDES = [
   ['b', 'black'],
 ] as const
 let lastJobId = 0
+/** The one job-id sequence of the page (the pool treats a lower id as stale): analysis runs and Retry searches
+ *  both draw from it, so a search can never make a later analysis stale (review H1). */
+export const nextJobId = (): number => ++lastJobId
+/** The latest id handed out: a Retry search during a running analysis reuses it, so it supersedes nothing. */
+export const latestJobId = (): number => lastJobId
 
 const usable = (ev: PositionEval): boolean =>
   ev.terminal !== undefined || (!ev.notAnalysed && ev.lines.length > 0)
@@ -237,7 +242,7 @@ export async function analyzeGame(
   if (!todo.length) return review
 
   // Dispatch every needed position (k and k + 1 of each ply to do) in ply order, terminal ones synthesised.
-  const jobId = ++lastJobId
+  const jobId = nextJobId()
   const fenAt = (k: number): string => (k < n ? moves[k].before : moves[n - 1].after)
   const needed = [...new Set(todo.flatMap((i) => [i, i + 1]))].sort((a, b) => a - b)
   const positions = new Map<number, Promise<PositionEval>>()

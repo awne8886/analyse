@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest'
 import type { PositionEval, Score, SearchLimits } from '../types/engine'
 import type { ImportedGame } from '../types/game'
 import type { GameReview, PlyReview } from '../types/review'
-import { analyzeGame, gameAccuracy } from './index'
+import { analyzeGame, gameAccuracy, latestJobId, nextJobId } from './index'
 import {
   cp,
   DESKTOP_PROFILE,
@@ -94,6 +94,16 @@ describe('analyzeGame: forwards pipeline (R16)', () => {
       depth: 16,
       multiPv: 2,
     })
+  })
+
+  it('shares one job-id sequence with Retry searches, so an id handed out elsewhere never makes it stale', async () => {
+    const retryJob = nextJobId() // e.g. a Retry search while no analysis runs
+    expect(latestJobId()).toBe(retryJob)
+    const game = makeGame(SIX, { customStart: true })
+    const engine = new FakeEngine(scripted(game, () => ({ score: cp(20) })))
+    await run(game, engine)
+    expect(engine.calls.every((c) => c.jobId > retryJob)).toBe(true)
+    expect(latestJobId()).toBe(engine.calls[0].jobId)
   })
 
   it('classifies ply k as soon as position k + 1 has arrived, and not before', async () => {

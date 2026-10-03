@@ -8,7 +8,7 @@ export { estimateRating } from './rating'
 export { dividePhases, majorsAndMinors, backrankSparse, mixedness, phaseGrade } from './phases'
 export { keyMoments } from './keyMoments'
 export { lookupOpening, epdOf } from './openings'
-export { analyzeGame } from './analyzeGame'
+export { analyzeGame, latestJobId, nextJobId } from './analyzeGame'
 export { summarySentence } from './summary'
 export {
   calibrationReport,

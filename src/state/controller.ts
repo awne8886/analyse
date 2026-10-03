@@ -2,7 +2,7 @@
 // pool -> calibrate -> analyzeGame with explainPly -> incremental persistence -> progressive rendering.
 // Every entry point is idempotent: the first GitHub Pages visit can start the app twice (risk 12).
 import { Chess } from 'chess.js'
-import { REVIEW_CONFIG, analyzeGame, classifyPly } from '../analysis'
+import { REVIEW_CONFIG, analyzeGame, classifyPly, latestJobId, nextJobId } from '../analysis'
 import { calibrate, createEnginePool } from '../engine'
 import { buildMoveFacts, explain } from '../explain'
 import { confirmInProgress, importGame, parseInput } from '../import'
@@ -42,7 +42,6 @@ interface Session {
   pool: EngineApi | null
   importing: Promise<void> | null
   analysis: AbortController | null
-  retryJob: number
   revertTimer: ReturnType<typeof setTimeout> | null
 }
 const session: Session = {
@@ -52,7 +51,6 @@ const session: Session = {
   pool: null,
   importing: null,
   analysis: null,
-  retryJob: 1_000_000,
   revertTimer: null,
 }
 
@@ -590,8 +588,10 @@ async function gradeRetry(
       const { pool, tier } = await ensureEngine()
       const device = session.device as DeviceProfile
       const profile = engineProfileFor(device, tierFor(settings().profile, tier))
-      session.retryJob += 1
-      after = await pool.evaluate(move.after, { ...profile.limits, multiPv: 1 }, session.retryJob)
+      // One job-id sequence with the analysis (review H1): during a running pass the search reuses its id, so it
+      // cancels nothing; otherwise it takes a fresh one.
+      const jobId = session.analysis ? latestJobId() : nextJobId()
+      after = await pool.evaluate(move.after, { ...profile.limits, multiPv: 1 }, jobId)
     } catch {
       store().patch({ retry: { active: true, checking: false, fen: null } })
       return
