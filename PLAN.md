@@ -98,7 +98,7 @@ Phase 4 reports: docs/review/correctness.md (3 high, 2 medium, 10 low), a11y.md 
 | correctness L10 (bare link: live found + daily failed drops the live game) | fixed now by the lead (src/import/importGame.ts + src/import/bareLink.test.ts) |
 | correctness H2, H3, M1, M2 (unproven material/tactic claims, shown line vs counted line), L1 (second mover negation in facts.ts), L5, L6, L7, L8, L9 | fix now: `fix-explain` |
 | correctness L2 (stored explanation built before ply k+1 exists, no playedPv) | fix now: `fix-ui` (re-explain plies whose successor arrived; the UI renders explanations from the full review) |
-| correctness L3 (record-evals builds its own key) | fix now (lead): a unit test asserts the script's key format equals `evalKey` |
+| correctness L3 (record-evals builds its own key) | fixed (lead): src/test/integration/evalKeys.test.ts asserts every recorded key equals `evalKey(fen, limits)` |
 | correctness L4 (cancel during newGame still searches) | fix now: `fix-engine` |
 | performance H2 (respawn failure leaves an empty pool; E-2 Retry reuses it and hangs) | fix now: `fix-engine` (pool fails pending jobs and reports E-2) + `fix-ui` (E-2 Retry disposes and recreates the pool) |
 | performance M2 (`ucinewgame` once per page, not per game) | fix now: `fix-engine` |
@@ -133,7 +133,11 @@ Phase 4 reports: docs/review/correctness.md (3 high, 2 medium, 10 low), a11y.md 
 | impl-explain | 2 | general-purpose (inherit) | worktree-agent-a120e6c225c5dd86c @ 49363b6 | merged |
 | impl-ui | 2 | general-purpose (inherit) | worktree-agent-ad98a86a3637f9fb6 @ b914ae4 | merged |
 | impl-deploy | 2 | general-purpose (inherit) | worktree-agent-a88957d9b2d897a61 @ 85c13a3 | merged |
-| review-correctness | 4 | general-purpose (inherit) | main checkout (docs/review/correctness.md) | running |
+| review-correctness | 4 | general-purpose (inherit) | main checkout (docs/review/correctness.md) | done |
 | review-a11y | 4 | general-purpose (inherit) | main checkout (docs/review/a11y.md) | running |
-| review-performance-mobile | 4 | general-purpose (inherit) | main checkout (docs/review/performance.md) | running |
-| review-parity | 4 | general-purpose (inherit) | main checkout (docs/review/parity.md) | running |
+| review-performance-mobile | 4 | general-purpose (inherit) | main checkout (docs/review/performance.md) | done |
+| review-parity | 4 | general-purpose (inherit) | main checkout (docs/review/parity.md) | done |
+| fix-ui | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
+| fix-explain | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
+| fix-engine | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
+| docs-deploy | 5 | general-purpose (sonnet) | worktree (from 0c232f5) | running |
