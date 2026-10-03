@@ -142,3 +142,8 @@ total 1112
 $ cat dist/assets/*.js | gzip -c | wc -c
 230041
 ```
+
+## 2026-10-03 CI on GitHub Actions (WebKit evidence)
+
+- Run 8 (https://github.com/awne8886/analyse/actions/runs/37080644235) on 3d9e663: conclusion **success** — `checks` (lint, format, typecheck, `npm test -- --coverage`, both builds and coi greps) and `e2e` (26 tests: Chromium 153 and WebKit 26.6, including engine-smoke and pages-coi in WebKit).
+- Earlier runs on the same PR failed and were fixed: Retry drag during the step-back animation (Chrome 153), WebKit engine stuck at "loading 100%" with the download-progress port (PLAN Assumption 27), WebKit Pages first visit needing a third document (PLAN Assumption 28; diagnostics `[{isolated:false,controlled:false},{isolated:false,controlled:true},{isolated:true,controlled:true}]`).
