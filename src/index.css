@@ -14,6 +14,23 @@
   --color-classification-miss: #ff7769;
   --color-classification-blunder: #e02828;
   --color-classification-forced: #96af8b;
+  /* Classification-coloured TEXT (a11y H2/M1, G.28): a darker (light theme) or lighter (dark theme) shade of each
+     section 3.6 colour with at least 4.5:1 on the panel, alternate-row and active-row backgrounds. Icons, square
+     tints and arrows keep the section 3.6 values above. src/ui/contrast.test.ts checks every pair. */
+  --color-classification-text-brilliant: #0c7065;
+  --color-classification-text-great: #476587;
+  --color-classification-text-best: #436e34;
+  --color-classification-text-excellent: #436e34;
+  --color-classification-text-good: #556843;
+  --color-classification-text-book: #7d5d43;
+  --color-classification-text-inaccuracy: #7d5d14;
+  --color-classification-text-mistake: #94531d;
+  --color-classification-text-miss: #9e4a41;
+  --color-classification-text-blunder: #c12222;
+  --color-classification-text-forced: #586752;
+  --color-phase-middlegame-text: #87572f;
+  --color-phase-endgame-text: #40639d;
+  --color-title-bg: #e02828;
   --color-page: #f1f1f1;
   --color-panel: #ffffff;
   --color-border: #dad8d6;
@@ -56,11 +73,25 @@
   --color-classification-miss: #ff7769;
   --color-classification-blunder: #fa412d;
   --color-classification-forced: #96af8b;
+  --color-classification-text-brilliant: #4dcdb4;
+  --color-classification-text-great: #a2bcd4;
+  --color-classification-text-best: #9dc673;
+  --color-classification-text-excellent: #9dc673;
+  --color-classification-text-good: #a5c28b;
+  --color-classification-text-book: #dbb18f;
+  --color-classification-text-inaccuracy: #f7c631;
+  --color-classification-text-mistake: #ffa459;
+  --color-classification-text-miss: #ffa096;
+  --color-classification-text-blunder: #fda298;
+  --color-classification-text-forced: #abbfa2;
+  --color-phase-middlegame-text: #ffa459;
+  --color-phase-endgame-text: #96bbf9;
+  --color-title-bg: #d73827;
   --color-page: #312e2b;
   --color-panel: #262522;
   --color-border: #3d3a37;
   --color-text: #e8e6e3;
-  --color-text-muted: #8b8987;
+  --color-text-muted: #bebdb9; /* PLAN Assumption 29: #8b8987 is 4.40:1 on panels (G.28) */
   --color-link: #8fbfe6;
   --color-button: #3d3a37;
   --color-button-hover: #4b4847;

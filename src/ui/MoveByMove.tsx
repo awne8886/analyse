@@ -11,10 +11,10 @@ import { CoachBox } from './CoachBox'
 import { ARROW_BEST, ARROW_THREAT, CLASS_COLORS, LAST_MOVE, withAlpha } from './colors'
 import { EvalBar } from './EvalBar'
 import { EvalGraph } from './EvalGraph'
-import { evalBarResult, positionScore } from './format'
+import { evalBarResult, openingAt, positionScore } from './format'
 import { MoveList } from './MoveList'
 import { copyShareLink, goToPly, step, toFirst, toLast } from './navigation'
-import { ProgressBar, ReviewBanners } from './ProgressBar'
+import { ReviewBanners } from './ProgressBar'
 import { playSound } from './sounds'
 import { t } from './strings'
 import { useExplanation } from './useExplanation'
@@ -89,10 +89,13 @@ export function MoveByMove() {
   const atEnd = ply === game.moves.length && ply > 0 && review?.complete === true
   const device = getDevice()
   const retryDisabled = ply === 0 || !done || (device?.multiPv === 1 && phase === 'analysing') || !pr.bestUci
-  const inBook = review?.opening && ply >= 1 && ply <= review.opening.lastBookPly
+  const opening = openingAt(game, review, ply)
 
   return (
-    <section className="moves-screen" data-testid="move-by-move">
+    <section className="moves-screen" data-testid="move-by-move" aria-labelledby="moves-title">
+      <h1 id="moves-title" className="sr-only" tabIndex={-1}>
+        {t('moves.title')}
+      </h1>
       <div className="moves-toolbar">
         <button type="button" data-testid="back-to-overview" onClick={() => setScreen('overview')}>
           {t('button.back')}
@@ -105,7 +108,6 @@ export function MoveByMove() {
         </button>
       </div>
       <ReviewBanners />
-      <ProgressBar />
       <div className="moves-layout">
         <div className="board-area">
           <EvalBar
@@ -143,9 +145,9 @@ export function MoveByMove() {
             onRetry={startRetry}
             onExitRetry={stopRetry}
           />
-          {inBook ? (
+          {opening ? (
             <p className="opening-name" data-testid="opening-name">
-              {review.opening?.eco} {review.opening?.name}
+              {opening.eco} {opening.name}
             </p>
           ) : null}
           <MoveList

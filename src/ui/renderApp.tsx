@@ -28,3 +28,10 @@ export function renderApp(profile: DeviceProfile | null): void {
     </StrictMode>,
   )
 }
+
+/** Test seam: unmounts the root renderApp/renderSplash created, so no React work outlives a test file. */
+export function unmountApp(): void {
+  root?.unmount()
+  root = null
+  appRendered = false
+}

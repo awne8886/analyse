@@ -1,38 +1,64 @@
 // Analysis progress with ETA (R16, G.25: E-8, E-10 while refining, E-8b on phones; never a spinner alone), the
 // review banners (I-15, I-36, E-3) and the engine failure line (E-2 with Retry).
+import { useState } from 'react'
 import { getDevice, retryEngine, useReviewStore } from '../state'
 import { renderKeyed } from './messages'
 import { t } from './strings'
 
+/** The analysis progress (role="status"). It is mounted once by the app shell and stays mounted (empty while
+ *  idle), so its first message and the completion are announced (a11y L1); the bar and text are visible only
+ *  while analysing. E-10 shows whenever candidate plies are being refined (performance L1). */
 export function ProgressBar() {
   const phase = useReviewStore((s) => s.phase)
   const progress = useReviewStore((s) => s.progress)
   const engine = useReviewStore((s) => s.engine)
-  if (phase !== 'analysing') return null
+  const [sawAnalysis, setSawAnalysis] = useState(false)
+  const analysing = phase === 'analysing'
+  // "Analysis complete." is announced only for a run this page watched, not for a stored review opened later
+  if (analysing !== sawAnalysis && phase !== 'complete') setSawAnalysis(analysing)
   const total = progress?.total ?? 0
   const done = progress?.done ?? 0
   const pct = total ? Math.round((100 * done) / total) : 0
-  let text: string
-  if (!progress) {
+  let text = ''
+  let refiningText = ''
+  if (!analysing) {
+    if (phase === 'complete' && sawAnalysis) text = t('progress.complete')
+  } else if (!progress) {
     text =
       engine.phase === 'loading' && engine.percent !== null
         ? t('engine.loading', { percent: Math.round(engine.percent * 100) })
         : t('engine.loadingNoPercent')
-  } else if (done >= total && progress.refining > 0) {
-    text = renderKeyed({ key: 'E-10', vars: { k: progress.refining } })
   } else {
-    const seconds = progress.etaMs === null ? '…' : Math.max(0, Math.ceil(progress.etaMs / 1000))
-    text = renderKeyed({ key: 'E-8', vars: { n: Math.min(done + 1, total), total, s: seconds } })
+    const refining = progress.refining > 0 ? renderKeyed({ key: 'E-10', vars: { k: progress.refining } }) : ''
+    if (done >= total && refining) text = refining
+    else {
+      const seconds = progress.etaMs === null ? '…' : Math.max(0, Math.ceil(progress.etaMs / 1000))
+      text = renderKeyed({ key: 'E-8', vars: { n: Math.min(done + 1, total), total, s: seconds } })
+      refiningText = refining
+    }
   }
   return (
-    <div className="progress panel">
-      <div className="progress-track" aria-hidden="true">
-        <div className="progress-fill" style={{ width: `${pct}%` }} />
-      </div>
-      <p data-testid="analysis-progress" role="status" aria-live="polite">
+    <div className={analysing ? 'progress panel' : 'progress-idle'}>
+      {analysing ? (
+        <div className="progress-track" aria-hidden="true">
+          <div className="progress-fill" style={{ width: `${pct}%` }} />
+        </div>
+      ) : null}
+      <p
+        data-testid="analysis-progress"
+        role="status"
+        aria-live="polite"
+        className={analysing ? undefined : 'sr-only'}
+      >
         {text}
+        {refiningText ? (
+          <>
+            {' '}
+            <span className="progress-refining">{refiningText}</span>
+          </>
+        ) : null}
       </p>
-      {getDevice()?.isMobile ? <p className="hint">{renderKeyed({ key: 'E-8b' })}</p> : null}
+      {analysing && getDevice()?.isMobile ? <p className="hint">{renderKeyed({ key: 'E-8b' })}</p> : null}
     </div>
   )
 }

@@ -44,6 +44,7 @@ export {
   startRetry,
   stopRetry,
   tryRetryMove,
+  tryRetryText,
   gradeOf,
   praiseKey,
   tierFor,

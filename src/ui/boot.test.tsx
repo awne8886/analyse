@@ -58,9 +58,14 @@ function fakePool(): EngineHandle {
   }
 }
 
+// renderApp mounts its own root, which testing-library's cleanup never sees: unmount it after each test so no
+// React work outlives the jsdom environment.
+let unmountApp: (() => void) | undefined
+
 async function freshBoot() {
   vi.resetModules()
-  const { renderApp } = await import('./renderApp')
+  const { renderApp, unmountApp: unmount } = await import('./renderApp')
+  unmountApp = unmount
   const state = await import('../state')
   return { renderApp, state }
 }
@@ -73,7 +78,13 @@ beforeEach(() => {
   vi.mocked(calibrate).mockReset()
   vi.mocked(analyzeGame).mockReset()
 })
-afterEach(cleanup)
+afterEach(async () => {
+  await act(async () => {
+    unmountApp?.()
+  })
+  unmountApp = undefined
+  cleanup()
+})
 
 describe('renderApp idempotence (risk 12)', () => {
   it('called twice: one root, one store, one import, one engine pool', async () => {

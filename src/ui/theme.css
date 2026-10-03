@@ -133,6 +133,8 @@ select.greyed {
 }
 .settings-panel {
   display: grid;
+  /* a11y H1 / parity GAP-1: one track that may shrink below the profile select's min-content width */
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
   margin-bottom: 12px;
 }
@@ -202,6 +204,7 @@ select.greyed {
 }
 .import-form {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 10px;
 }
 .import-form textarea {
@@ -220,9 +223,13 @@ select.greyed {
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  flex: 1 1 16rem;
   min-width: 0;
+  max-width: 100%;
 }
 .profile-line select {
+  flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
 }
@@ -318,6 +325,9 @@ select.greyed {
 .progress p {
   margin: 6px 0 0;
 }
+.progress-refining {
+  display: block;
+}
 .progress-track {
   height: 8px;
   background: var(--color-border);
@@ -392,7 +402,7 @@ select.greyed {
   overflow-wrap: anywhere;
 }
 .player-title {
-  background: var(--color-classification-blunder);
+  background: var(--color-title-bg);
   color: #fff;
   border-radius: 3px;
   padding: 0 4px;
@@ -409,7 +419,7 @@ select.greyed {
   color: var(--color-text-muted);
 }
 .winner .player-name {
-  color: var(--color-classification-best);
+  color: var(--color-classification-text-best);
 }
 .result {
   font-family: var(--font-heading);
@@ -546,11 +556,25 @@ select.greyed {
 }
 .eval-graph-phase {
   position: absolute;
+  color: var(--color-text);
   top: 0;
   font-size: 0.7rem;
   transform: translateX(-50%);
   white-space: nowrap;
   pointer-events: none;
+}
+.eval-graph-focus {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  right: 0;
+  height: 120px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+.eval-graph-focus:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 .eval-graph-tip {
   position: absolute;
@@ -678,16 +702,34 @@ select.greyed {
   flex-wrap: wrap;
 }
 .grade-correct {
-  color: var(--color-classification-best);
+  color: var(--color-classification-text-best);
 }
 .grade-good {
-  color: var(--color-classification-good);
+  color: var(--color-classification-text-good);
 }
 .grade-ok {
-  color: var(--color-classification-book);
+  color: var(--color-classification-text-book);
 }
 .grade-incorrect {
-  color: var(--color-classification-blunder);
+  color: var(--color-classification-text-blunder);
+}
+.retry-entry {
+  display: grid;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+.retry-entry-line {
+  display: flex;
+  gap: 6px;
+  min-width: 0;
+}
+.retry-entry input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 4px 8px;
+}
+.retry-illegal {
+  color: var(--color-classification-text-blunder);
 }
 .key-strip {
   display: flex;
@@ -863,5 +905,14 @@ select.greyed {
   }
   .app-nav .label {
     display: none;
+  }
+}
+
+/* Reduced motion (a11y optional item): the board already skips its animation; the bars and ticks follow suit */
+@media (prefers-reduced-motion: reduce) {
+  .eval-bar-white,
+  .progress-fill,
+  .key-tick {
+    transition: none;
   }
 }

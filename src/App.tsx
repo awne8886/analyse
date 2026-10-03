@@ -1,7 +1,7 @@
 // The app shell: header (name, New game, Settings), the current screen (no router; the screen follows the
 // store and the query string, R29), the footer with About / Licenses, and the global review hotkeys (G.23).
 import { Settings as SettingsIcon } from 'lucide-react'
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useRef, useState } from 'react'
 import { newGame, useReviewStore, useSettingsStore } from './state'
 import { Footer } from './ui/Footer'
 import { ImportScreen } from './ui/ImportScreen'
@@ -9,6 +9,7 @@ import { MoveByMove } from './ui/MoveByMove'
 import { handleKey } from './ui/navigation'
 import { Overview } from './ui/Overview'
 import { EngineStatus } from './ui/EngineStatus'
+import { ProgressBar } from './ui/ProgressBar'
 import { SettingsPanel } from './ui/Settings'
 import { t } from './ui/strings'
 import './ui/theme.css'
@@ -33,6 +34,21 @@ export default function App() {
   }, [])
 
   const reviewing = game !== undefined && (screen === 'overview' || screen === 'moves')
+  const view = screen === 'calibration' ? 'calibration' : reviewing ? screen : 'import'
+
+  // a11y L2: the control that changed the screen unmounts with the old screen, so focus lands on the new
+  // screen's heading instead of falling back to <body>. The first render keeps the page's own focus (P-5 focuses
+  // the username field).
+  const mainRef = useRef<HTMLElement>(null)
+  const shownView = useRef(view)
+  useEffect(() => {
+    if (shownView.current === view) return
+    shownView.current = view
+    const active = document.activeElement
+    if (active && active !== document.body && active.isConnected) return
+    mainRef.current?.querySelector<HTMLElement>('h1')?.focus()
+  }, [view])
+
   return (
     <div className={`app theme-${theme}`}>
       <header className="app-header">
@@ -56,7 +72,9 @@ export default function App() {
         </nav>
       </header>
       {settingsOpen ? <SettingsPanel /> : null}
-      <main className="app-main">
+      <main className="app-main" ref={mainRef}>
+        {reviewing ? <EngineStatus hideWhenIdle /> : null}
+        <ProgressBar />
         {screen === 'calibration' ? (
           <Suspense fallback={null}>
             <Calibration />
@@ -68,7 +86,6 @@ export default function App() {
             data-complete={review?.complete === true && persistedComplete ? 'true' : 'false'}
             data-game-id={game.id}
           >
-            <EngineStatus hideWhenIdle />
             {screen === 'overview' ? <Overview /> : <MoveByMove />}
           </div>
         ) : (

@@ -1,7 +1,7 @@
 // Hand-rolled SVG evaluation graph (G.9): y clamped to +-5 pawns (mates at +-5), White's area filled from the
 // bottom, zero line, hover tooltip, click to jump, key-moment ticks, phase lines, cursor, hollow "not analysed"
 // points. Text sits in an HTML overlay so the stretched SVG never distorts it.
-import { useState, type MouseEvent } from 'react'
+import { useState, type KeyboardEvent, type MouseEvent } from 'react'
 import type { ImportedGame } from '../types/game'
 import type { GameReview } from '../types/review'
 import { CLASS_COLORS, PHASE_ENDGAME, PHASE_MIDDLEGAME } from './colors'
@@ -47,15 +47,55 @@ export function EvalGraph({
     return Math.max(0, Math.min(last, Math.round(((e.clientX - rect.left) / rect.width) * total)))
   }
   const phaseLines = [
-    { start: review?.phaseStarts.middlegame, colour: PHASE_MIDDLEGAME, name: t('phase.middlegame') },
-    { start: review?.phaseStarts.endgame, colour: PHASE_ENDGAME, name: t('phase.endgame') },
+    {
+      start: review?.phaseStarts.middlegame,
+      colour: PHASE_MIDDLEGAME,
+      name: t('phase.middlegame'),
+      key: 'middlegame',
+    },
+    { start: review?.phaseStarts.endgame, colour: PHASE_ENDGAME, name: t('phase.endgame'), key: 'endgame' },
   ].filter((p) => p.start !== undefined && p.start > 0) as Array<{
     start: number
     colour: string
     name: string
+    key: string
   }>
   const hovered = hover !== null ? review?.plies[hover - 1] : undefined
   const hoverScore = hover !== null ? positionScore(review, hover) : undefined
+
+  // Keyboard access (a11y M3): the focusable slider overlay moves a cursor over the plotted plies with the arrow
+  // keys (tooltip shown), Home/End/PageUp/PageDown jump, and Enter or Space selects like a click. Its key events
+  // never reach the global step hotkeys (navigation.ts).
+  const clampIdx = (i: number) => Math.max(0, Math.min(Math.max(0, last), i))
+  const cursor = clampIdx(hover ?? ply)
+  const valueText = (i: number) => {
+    const score = positionScore(review, i)
+    const where = i > 0 && game.moves[i - 1] ? moveLabel(game.moves[i - 1]) : t('graph.start')
+    const p = review?.plies[i - 1]
+    const cls = p?.status === 'done' ? t(`class.${p.classification}`) : ''
+    return t(cls ? 'graph.valueClassified' : 'graph.value', {
+      move: where,
+      class: cls,
+      eval: score ? formatEval(score) : t('label.notAvailable'),
+    })
+  }
+  const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const moves: Record<string, number> = {
+      ArrowLeft: cursor - 1,
+      ArrowDown: cursor - 1,
+      ArrowRight: cursor + 1,
+      ArrowUp: cursor + 1,
+      PageDown: cursor - 10,
+      PageUp: cursor + 10,
+      Home: 0,
+      End: last,
+    }
+    if (e.key in moves) setHover(clampIdx(moves[e.key]))
+    else if (e.key === 'Enter' || e.key === ' ') onSelect(cursor)
+    else return
+    e.preventDefault()
+    e.stopPropagation()
+  }
 
   return (
     <div className="eval-graph-wrap">
@@ -152,11 +192,25 @@ export function EvalGraph({
         <span
           key={p.name}
           className="eval-graph-phase"
-          style={{ left: `${(p.start / total) * 100}%`, color: p.colour }}
+          style={{ left: `${(p.start / total) * 100}%`, color: `var(--color-phase-${p.key}-text)` }}
         >
           {p.name}
         </span>
       ))}
+      <div
+        className="eval-graph-focus"
+        data-testid="eval-graph-keyboard"
+        role="slider"
+        tabIndex={0}
+        aria-label={t('graph.slider')}
+        aria-valuemin={0}
+        aria-valuemax={Math.max(0, last)}
+        aria-valuenow={cursor}
+        aria-valuetext={valueText(cursor)}
+        onFocus={() => setHover(cursor)}
+        onBlur={() => setHover(null)}
+        onKeyDown={onKeyDown}
+      />
       {hover !== null && hoverScore ? (
         <div className="eval-graph-tip" style={{ left: `${(hover / total) * 100}%` }} role="presentation">
           {hovered && hovered.status === 'done' ? (
