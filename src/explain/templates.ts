@@ -387,11 +387,11 @@ export const T = {
   sacMaterial: {
     impersonal: [
       'Brilliant: the {piece} on {square} can be taken, but after {pv} the material comes back with interest.',
-      'Brilliant: the {piece} on {square} is offered, and after {pv} {Color} comes out ahead by {net}.',
+      'Brilliant: the {piece} on {square} is offered, and after {pv} {Color} comes out ahead by {material}.',
     ],
     personal: [
-      'Brilliant! Your {piece} on {square} can be taken, but after {pv} you come out ahead by {net}.',
-      'Brilliant! You offer the {piece} on {square}, and after {pv} you are ahead by {net}.',
+      'Brilliant! Your {piece} on {square} can be taken, but after {pv} you come out ahead by {material}.',
+      'Brilliant! You offer the {piece} on {square}, and after {pv} you are ahead by {material}.',
     ],
   },
   sacTactic: {
@@ -490,7 +490,10 @@ export const T = {
   },
   winsMaterial: {
     impersonal: ['The best move: it wins {material} after {pv}.', 'This nets {material}; the point is {pv}.'],
-    personal: ['The best move: you win {material} after {pv}.', 'You come out ahead by {net} after {pv}.'],
+    personal: [
+      'The best move: you win {material} after {pv}.',
+      'You come out ahead by {material} after {pv}.',
+    ],
   },
   winsTempo: {
     impersonal: ['Attacks the {target} and gains time.', 'Hits the {target}, gaining a tempo.'],
@@ -507,8 +510,8 @@ export const T = {
     ],
   },
   recapture: {
-    impersonal: ['Takes back the {piece}.', 'Recaptures the {piece} and restores the balance.'],
-    personal: ['You take back the {piece}.', 'You recapture the {piece} and restore the balance.'],
+    impersonal: ['Takes back the {piece}.', 'Recaptures the {piece} straight away.'],
+    personal: ['You take back the {piece}.', 'You recapture the {piece} straight away.'],
   },
   equalTrade: {
     impersonal: ['An even trade.', 'A fair exchange that keeps material level.'],

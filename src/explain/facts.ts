@@ -2,8 +2,7 @@
 // Engine data comes from PlyReview; every motif comes from the E.1 detectors run with chess.js on the boards before
 // the move, after it, after the engine's reply and after the engine's best move.
 import { Chess, type Color, type Move } from 'chess.js'
-import { lookupOpening, REVIEW_CONFIG, winPct } from '../analysis'
-import type { Score } from '../types/engine'
+import { lookupOpening, REVIEW_CONFIG, toMover, winPct } from '../analysis'
 import type { Motif, MoveFacts } from '../types/explain'
 import type { GameReview } from '../types/review'
 import * as D from './detectors'
@@ -12,7 +11,6 @@ import * as D from './detectors'
 const MAX_PV = 8
 
 const other = (c: Color): Color => (c === 'w' ? 'b' : 'w')
-const moverPov = (s: Score, color: Color): Score => (color === 'w' ? s : { type: s.type, value: -s.value })
 const uciMove = (uci: string) => ({ from: uci.slice(0, 2), to: uci.slice(2, 4), promotion: uci[4] })
 const epd = (fen: string) => fen.split(' ').slice(0, 4).join(' ')
 
@@ -31,21 +29,32 @@ export function pvToSan(fen: string, ucis: string[], max = MAX_PV): string[] {
 }
 
 export interface MaterialLine {
-  /** Net material change in pawn units, from `mover`'s point of view. */
+  /** Net material change in pawn units, from `mover`'s point of view, over the counted window. */
   net: number
-  /** Piece letters `mover` lost and gained along the counted part of the line. */
+  /** Piece letters `mover` lost and gained inside the window. */
   lost: string[]
   gained: string[]
   captures: number
-  /** Plies consumed up to the point where the material was settled. */
+  /** Plies replayed (the line stops early at an illegal move or at `max`). */
   plies: number
+  /**
+   * Plies the net figure rests on: through the quiet move that follows the last counted capture, or to the end of
+   * the replayed line when it ends on a counted capture. Replaying exactly these plies gives the same `net`.
+   */
+  window: number
+  /**
+   * Captures inside the window: line index, whether `mover` made it, and `path`, every square the captured piece
+   * stood on from the start of the line up to the square it was taken on.
+   */
+  taken: Array<{ ply: number; byMover: boolean; path: string[] }>
 }
 
 /**
- * Material along a SAN line (E.2): replay on a chess.js copy and take materialDiff(after) - materialDiff(before)
- * from the mover's POV, stopping at the end of the line or after a quiet move that follows a capture. When the line
- * ends mid-exchange the last capture is not counted as a net gain for its side: with `measure` 'gain' a final
- * capture by the mover is dropped, with 'loss' a final capture by the opponent is dropped.
+ * Material along a SAN line (E.2, E.3): replay on a chess.js copy and take materialDiff(after) - materialDiff(before)
+ * from the mover's POV over the whole (truncated) line, so the count stops at the end of the line or after the quiet
+ * move that follows the last capture. When the line ends on a capture the exchange may be unfinished, so that last
+ * capture is not counted as a net gain for its side: with `measure` 'gain' a final capture by the mover is dropped,
+ * with 'loss' a final capture by the opponent is dropped (a capture against the measured side is always kept).
  */
 export function materialAlong(
   fen: string,
@@ -56,47 +65,52 @@ export function materialAlong(
 ): MaterialLine {
   const c = new Chess(fen)
   const start = D.materialDiff(c, mover)
-  const lost: string[] = []
-  const gained: string[] = []
-  let captures = 0
-  let seenChange = false
-  let plies = 0
-  let last: { move: Move; diffBefore: number } | null = null
-  let endsOnChange = false
+  const steps: Array<{ move: Move; diffBefore: number }> = []
   for (const san of sans.slice(0, max)) {
     const diffBefore = D.materialDiff(c, mover)
-    let m: Move
     try {
-      m = c.move(san)
+      steps.push({ move: c.move(san), diffBefore })
     } catch {
       break
     }
-    plies++
-    const changes = Boolean(m.captured || m.promotion)
-    if (m.captured) {
-      captures++
-      if (m.color === mover) gained.push(m.captured)
-      else lost.push(m.captured)
-    }
-    endsOnChange = changes
-    if (changes) {
-      seenChange = true
-      last = { move: m, diffBefore }
-    } else if (seenChange) break
   }
+  const plies = steps.length
+  const changes = (m: Move) => Boolean(m.captured || m.promotion)
+  const lastChange = steps.findLastIndex((s) => changes(s.move))
+  let window = lastChange < 0 ? 0 : Math.min(plies, lastChange + 2)
   let net = D.materialDiff(c, mover) - start
-  if (endsOnChange && last) {
-    const byMover = last.move.color === mover
+  if (lastChange === plies - 1 && lastChange >= 0) {
+    const byMover = steps[lastChange].move.color === mover
     if ((measure === 'gain' && byMover) || (measure === 'loss' && !byMover)) {
-      net = last.diffBefore - start
-      if (last.move.captured) {
-        captures--
-        const list = byMover ? gained : lost
-        list.splice(list.lastIndexOf(last.move.captured), 1)
-      }
+      net = steps[lastChange].diffBefore - start
+      window = lastChange
     }
   }
-  return { net, lost, gained, captures, plies }
+  const lost: string[] = []
+  const gained: string[] = []
+  const taken: MaterialLine['taken'] = []
+  // Where each piece has been along the line, keyed by its current square.
+  const paths = new Map<string, string[]>()
+  const relocate = (from: string, to: string) => {
+    const path = paths.get(from) ?? [from]
+    paths.delete(from)
+    paths.set(to, [...path, to])
+  }
+  steps.slice(0, window).forEach(({ move }, ply) => {
+    if (move.captured) {
+      const sq = move.isEnPassant() ? move.to[0] + move.from[1] : move.to
+      const byMover = move.color === mover
+      if (byMover) gained.push(move.captured)
+      else lost.push(move.captured)
+      taken.push({ ply, byMover, path: paths.get(sq) ?? [sq] })
+      paths.delete(sq)
+    }
+    relocate(move.from, move.to)
+    const rank = move.from[1]
+    if (move.isKingsideCastle()) relocate(`h${rank}`, `f${rank}`)
+    if (move.isQueensideCastle()) relocate(`a${rank}`, `d${rank}`)
+  })
+  return { net, lost, gained, captures: taken.length, plies, window, taken }
 }
 
 /** Fork, pins and skewers, discovered attacks, mate threat, free piece and trapped pieces created by `m`. */
@@ -143,8 +157,8 @@ export function buildMoveFacts(review: GameReview, ply: number, userColor: 'w' |
   const after = new Chess(p.after)
   const moveNumber = Number(p.before.split(' ')[5]) || Math.ceil(ply / 2)
 
-  const povBefore = moverPov(p.evalBefore, color)
-  const povAfter = moverPov(p.evalAfter, color)
+  const povBefore = toMover(p.evalBefore, color)
+  const povAfter = toMover(p.evalAfter, color)
   const mateBefore = povBefore.type === 'mate' && povBefore.value !== 0 ? povBefore.value : undefined
   const mateAfter = povAfter.type === 'mate' && povAfter.value !== 0 ? povAfter.value : undefined
 
@@ -161,7 +175,7 @@ export function buildMoveFacts(review: GameReview, ply: number, userColor: 'w' |
 
   let gapToSecondBest: MoveFacts['gapToSecondBest']
   if (p.secondLine) {
-    const second = moverPov(p.secondLine.score, color)
+    const second = toMover(p.secondLine.score, color)
     gapToSecondBest = {
       winPct: winPct(povBefore) - winPct(second),
       cp: povBefore.type === 'cp' && second.type === 'cp' ? povBefore.value - second.value : undefined,

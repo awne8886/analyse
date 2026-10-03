@@ -2,24 +2,27 @@
 // list and wraps the description of the move in its own sentence.
 import type { MoveFacts } from '../../types/explain'
 import { defendedSquares, detectKick, detectTempo } from '../detectors'
-import { describeMaterial, PIECE_NAME, type TemplateId } from '../templates'
+import { PIECE_NAME, type TemplateId } from '../templates'
 import { missedTactic } from './mistake'
 import {
   bestTacticGated,
   boards,
-  gainMaterial,
+  gainCount,
   generic,
   hasBest,
+  materialOf,
+  numberedLine,
   pieceAfter,
   pieceBefore,
-  playedGain,
-  playedGainLine,
+  playedMotifProven,
   playedTactic,
-  pvShort,
   rule,
   type Proof,
   type Rule,
 } from './shared'
+
+/** E.6 `{pvShort}`: at most 5 plies, so a gain counted over a longer window is not claimed. */
+const PV_SHORT_MAX = 5
 
 type Positive = Proof & { pd: string }
 interface PositiveDef {
@@ -79,7 +82,7 @@ const DEFS: PositiveDef[] = [
       if (!t) return null
       return {
         tpl: 'tactic',
-        cites: { motif: t.motif.type, netGain: playedGain(f) },
+        cites: { motif: t.motif.type, netGain: gainCount(f).net, mateAfter: f.mateAfter ?? 'none' },
         squares: t.squares,
         vars: { tacIng: t.ing },
         pd: t.s,
@@ -88,14 +91,14 @@ const DEFS: PositiveDef[] = [
   },
   {
     code: 'FreePiece',
-    when: (f) => has(f, 'freePiece') && playedGain(f) >= 1,
+    when: (f) => has(f, 'freePiece'),
     prove: (f) => {
       const m = f.motifsPlayed.find((x) => x.type === 'freePiece')
-      if (!m || m.type !== 'freePiece') return null
+      if (!m || m.type !== 'freePiece' || !playedMotifProven(f, m)) return null
       const piece = pieceBefore(f, m.square)
       return {
         tpl: 'freePiece',
-        cites: { freePiece: m.square, netGain: playedGain(f) },
+        cites: { freePiece: m.square, netGain: gainCount(f).net },
         squares: [m.square],
         vars: { piece, square: m.square },
         pd: `picks up a free ${piece}`,
@@ -104,16 +107,17 @@ const DEFS: PositiveDef[] = [
   },
   {
     code: 'WinsMaterial',
-    when: (f) => playedGain(f) >= 1,
+    when: () => true,
     prove: (f) => {
-      const line = playedGainLine(f)
-      const material = gainMaterial(f, line, playedGain(f))
-      const pv = pvShort(f, 0, line)
+      const c = gainCount(f)
+      if (c.net < 1 || c.shown.length > PV_SHORT_MAX) return null
+      const material = materialOf(c)
+      const pv = numberedLine(f, 0, c.shown)
       return {
         tpl: 'winsMaterial',
-        cites: { netGain: playedGain(f), line },
+        cites: { netGain: c.net, counted: c.shown },
         squares: [],
-        vars: { material, pv, net: describeMaterial(playedGain(f)) },
+        vars: { material, pv },
         pd: `wins ${material} after ${pv}`,
       }
     },

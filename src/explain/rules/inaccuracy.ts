@@ -1,5 +1,5 @@
-// Inaccuracy rules (PROMPT.md Appendix E.4, "Inaccuracy").
-import { evalSwing, gettingMated, hangsMate, missedMate } from './blunder'
+// Inaccuracy rules (PROMPT.md Appendix E.4, "Inaccuracy"), exactly the catalogue's list. A crossed win% bucket
+// still adds the E.7 swing as the second sentence (E.4 "Second sentence").
 import { missedTactic, slowerMate } from './mistake'
 import { generic, rule, type Rule } from './shared'
 
@@ -20,12 +20,8 @@ export const allowsCounterplay = rule({
 })
 
 export const INACCURACY_RULES: Rule[] = [
-  hangsMate,
-  gettingMated,
-  missedMate,
   missedTactic('missedTacticInaccuracy'),
   allowsCounterplay,
   slowerMate,
-  evalSwing,
   generic('Generic', 'inaccuracyGeneric', 'inaccuracyGenericNoBest'),
 ]

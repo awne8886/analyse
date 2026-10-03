@@ -1,6 +1,6 @@
-// Mistake rules (PROMPT.md Appendix E.4, "Mistake"): the Blunder list with softer verbs.
+// Mistake rules (PROMPT.md Appendix E.4, "Mistake"), exactly the catalogue's list, with softer verbs than Blunder.
 import { castlingRightsLost } from '../detectors'
-import { evalSwing, gettingMated, hangsMate, losesMaterial, missedMate } from './blunder'
+import { evalSwing, losesMaterial } from './blunder'
 import { allowedTactic, bestTactic, boards, generic, hasBest, rule, type Rule } from './shared'
 
 export const allowsTactic = rule({
@@ -69,11 +69,8 @@ export const slowerMate = rule({
 })
 
 export const MISTAKE_RULES: Rule[] = [
-  hangsMate,
-  gettingMated,
   losesMaterial('losesMaterialSoft'),
   allowsTactic,
-  missedMate,
   missedTactic('missedTacticMistake'),
   losesCastling,
   slowerMate,
