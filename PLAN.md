@@ -140,4 +140,4 @@ Phase 4 reports: docs/review/correctness.md (3 high, 2 medium, 10 low), a11y.md 
 | fix-ui | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
 | fix-explain | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
 | fix-engine | 4 | general-purpose (inherit) | worktree (from 0c232f5) | running |
-| docs-deploy | 5 | general-purpose (sonnet) | worktree (from 0c232f5) | running |
+| docs-deploy | 5 | general-purpose (sonnet) | worktree-agent-a15b025b9dec89407 @ 7ded9ab | merged |
