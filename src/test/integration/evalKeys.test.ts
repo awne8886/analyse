@@ -11,7 +11,7 @@ describe('recorded eval tables use evalKey', () => {
     const entries = Object.entries(table)
     expect(entries.length).toBeGreaterThan(0)
     for (const [key, ev] of entries) {
-      expect(key).toBe(evalKey(ev.fen, { depth: 16, movetimeMs: 2000, multiPv: 2 }))
+      expect(key).toBe(evalKey(ev.fen, { depth: 16, multiPv: 2 }))
     }
   })
 })
